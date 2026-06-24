@@ -1,21 +1,23 @@
-using BarberOS.Api.Common;
+﻿using BarberOS.Api.Common;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BarberOS.Api.Controllers;
-
-[ApiController]
-[Route("health")]
-public class HealthController : ControllerBase
+namespace BarberOS.Api.Controllers
 {
-    [HttpGet]
-    public IActionResult Get()
+
+    [ApiController]
+    [Route("health")]
+    public class HealthController : ControllerBase
     {
-        var payload = new
+        [HttpGet]
+        public IActionResult Get()
         {
-            status = "OK",
-            timestamp = DateTime.UtcNow,
-            environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Unknown"
-        };
-        return Ok(ApiResponse<object>.Ok(payload));
+            var payload = new
+            {
+                status = "OK",
+                timestamp = DateTime.UtcNow,
+                environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Unknown"
+            };
+            return Ok(ApiResponse<object>.Ok(payload));
+        }
     }
 }

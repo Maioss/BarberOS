@@ -1,6 +1,7 @@
-namespace BarberOS.Domain.Exceptions;
-
-public class ConflictException : DomainException
+namespace BarberOS.Domain.Exceptions
 {
-    public ConflictException(string message) : base(message) { }
+    public class ConflictException : DomainException
+    {
+        public ConflictException(string message) : base(message) { }
+    }
 }

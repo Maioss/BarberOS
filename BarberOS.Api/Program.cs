@@ -1,4 +1,10 @@
 using BarberOS.Api.Middleware;
+using BarberOS.Api.Services;
+using BarberOS.Application;
+using BarberOS.Application.Shared;
+using BarberOS.Infrastructure;
+using BarberOS.Infrastructure.Persistence;
+using BarberOS.Infrastructure.Seeding;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi;
 
@@ -10,6 +16,12 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 {
     options.SuppressModelStateInvalidFilter = true;
 });
+
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+
+builder.Services.AddApplication();
+builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -51,7 +63,17 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
 app.UseAuthorization();
+
 app.MapControllers();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<BarberOSDbContext>();
+    var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
+    await DataSeeder.SeedAsync(db, hasher);
+}
 
 app.Run();

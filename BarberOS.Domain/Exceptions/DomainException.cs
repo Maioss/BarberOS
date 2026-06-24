@@ -1,6 +1,7 @@
-namespace BarberOS.Domain.Exceptions;
-
-public abstract class DomainException : Exception
+namespace BarberOS.Domain.Exceptions
 {
-    protected DomainException(string message) : base(message) { }
+    public abstract class DomainException : Exception
+    {
+        protected DomainException(string message) : base(message) { }
+    }
 }

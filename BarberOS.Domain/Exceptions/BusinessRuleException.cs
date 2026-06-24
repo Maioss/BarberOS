@@ -1,6 +1,7 @@
-namespace BarberOS.Domain.Exceptions;
-
-public class BusinessRuleException : DomainException
+namespace BarberOS.Domain.Exceptions
 {
-    public BusinessRuleException(string message) : base(message) { }
+    public class BusinessRuleException : DomainException
+    {
+        public BusinessRuleException(string message) : base(message) { }
+    }
 }
