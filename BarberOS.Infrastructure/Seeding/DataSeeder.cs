@@ -1,4 +1,4 @@
-﻿using BarberOS.Application.Shared;
+using BarberOS.Application.Shared;
 using BarberOS.Domain.Entities;
 using BarberOS.Domain.Enums;
 using BarberOS.Infrastructure.Persistence;
@@ -7,23 +7,44 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BarberOS.Infrastructure.Seeding
 {
-
     public static class DataSeeder
     {
         public static async Task SeedAsync(BarberOSDbContext db, IPasswordHasher hasher, CancellationToken ct = default)
         {
             await db.Database.MigrateAsync(ct);
 
-            if (await db.Users.AnyAsync(ct)) return;
+            if (!await db.Users.AnyAsync(ct))
+            {
+                var superAdmin = User.Create(
+                    email: "superadmin@barberos.com",
+                    passwordHash: hasher.Hash("Admin123!"),
+                    fullName: "Super Admin",
+                    role: Role.SuperAdmin);
 
-            var superAdmin = User.Create(
-                email: "superadmin@barberos.com",
-                passwordHash: hasher.Hash("Admin123!"),
-                fullName: "Super Admin",
-                role: Role.SuperAdmin);
+                await db.Users.AddAsync(UserMapper.ToDbModel(superAdmin), ct);
+                await db.SaveChangesAsync(ct);
+            }
 
-            await db.Users.AddAsync(UserMapper.ToDbModel(superAdmin), ct);
-            await db.SaveChangesAsync(ct);
+            if (!await db.Barbershops.AnyAsync(ct))
+            {
+                var medellin = Barbershop.CreateMain("BarberOS Medellín Centro", "Calle 52 #43-15", "Medellín", "+574123456");
+                var bogota = Barbershop.CreateMain("BarberOS Bogotá Chapinero", "Cra 13 #63-52", "Bogotá", "+571987654");
+
+                await db.Barbershops.AddAsync(BarbershopMapper.ToDbModel(medellin), ct);
+                await db.Barbershops.AddAsync(BarbershopMapper.ToDbModel(bogota), ct);
+                await db.SaveChangesAsync(ct);
+
+                var medellinSur = Barbershop.CreateBranch("BarberOS Medellín Sur", "Av El Poblado #1-50", "Medellín", "+574111222", medellin.Id);
+                var medellinNorte = Barbershop.CreateBranch("BarberOS Medellín Norte", "Calle 77 #50-20", "Medellín", "+574333444", medellin.Id);
+                var bogotaUsaquen = Barbershop.CreateBranch("BarberOS Bogotá Usaquén", "Cra 6 #119-40", "Bogotá", "+571555666", bogota.Id);
+                var bogotaKennedy = Barbershop.CreateBranch("BarberOS Bogotá Kennedy", "Av Primera de Mayo #65-20", "Bogotá", "+571777888", bogota.Id);
+
+                await db.Barbershops.AddAsync(BarbershopMapper.ToDbModel(medellinSur), ct);
+                await db.Barbershops.AddAsync(BarbershopMapper.ToDbModel(medellinNorte), ct);
+                await db.Barbershops.AddAsync(BarbershopMapper.ToDbModel(bogotaUsaquen), ct);
+                await db.Barbershops.AddAsync(BarbershopMapper.ToDbModel(bogotaKennedy), ct);
+                await db.SaveChangesAsync(ct);
+            }
         }
     }
 }

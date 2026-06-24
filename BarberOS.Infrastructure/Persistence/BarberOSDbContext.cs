@@ -10,6 +10,7 @@ namespace BarberOS.Infrastructure.Persistence
         public BarberOSDbContext(DbContextOptions<BarberOSDbContext> options) : base(options) { }
 
         public DbSet<UserDbModel> Users => Set<UserDbModel>();
+        public DbSet<BarbershopDbModel> Barbershops => Set<BarbershopDbModel>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
