@@ -112,6 +112,24 @@ namespace BarberOS.Infrastructure.Seeding
                 await db.Barbers.AddAsync(BarberMapper.ToDbModel(barber3), ct);
                 await db.SaveChangesAsync(ct);
             }
+
+            if (!await db.Services.AnyAsync(ct))
+            {
+                var principales = await db.Barbershops.Where(b => b.IsMain).ToListAsync(ct);
+
+                foreach (var shop in principales)
+                {
+                    var corte = Service.Create(shop.Id, "Corte de cabello", "Corte clasico o moderno", 25000m, 30);
+                    var barba = Service.Create(shop.Id, "Arreglo de barba", "Perfilado y diseno", 15000m, 20);
+                    var cejas = Service.Create(shop.Id, "Cejas", "Depilacion y diseno", 8000m, 10);
+                    var combo = Service.Create(shop.Id, "Corte + Barba", "Combo completo", 35000m, 45);
+
+                    foreach (var svc in new[] { corte, barba, cejas, combo })
+                        await db.Services.AddAsync(ServiceMapper.ToDbModel(svc), ct);
+                }
+
+                await db.SaveChangesAsync(ct);
+            }
         }
     }
 }

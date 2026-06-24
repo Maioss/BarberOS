@@ -3,6 +3,8 @@ using BarberOS.Application.Barbershops.DTOs;
 using BarberOS.Application.Barbershops.UseCases;
 using BarberOS.Application.Barbers.DTOs;
 using BarberOS.Application.Barbers.UseCases;
+using BarberOS.Application.Services.DTOs;
+using BarberOS.Application.Services.UseCases;
 using BarberOS.Application.Shared;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -73,6 +75,17 @@ namespace BarberOS.Api.Controllers
         {
             await useCase.ExecuteAsync(id, ct);
             return Ok(ApiResponse<object>.Ok(null!, "Barbershop desactivado exitosamente."));
+        }
+
+        [HttpGet("{id:guid}/services")]
+        [AllowAnonymous]
+        public async Task<ActionResult<ApiResponse<IReadOnlyList<ServiceDto>>>> GetServices(
+            Guid id,
+            [FromServices] ListServicesByBarbershopUseCase useCase,
+            CancellationToken ct)
+        {
+            var result = await useCase.ExecuteAsync(id, ct);
+            return Ok(ApiResponse<IReadOnlyList<ServiceDto>>.Ok(result));
         }
 
         [HttpGet("{id:guid}/barbers")]
