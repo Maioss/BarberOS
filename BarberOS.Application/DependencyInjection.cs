@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using BarberOS.Application.Auth.UseCases;
 using BarberOS.Application.Barbershops.UseCases;
+using BarberOS.Application.Barbers.UseCases;
 using BarberOS.Application.Users.UseCases;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,6 +29,13 @@ namespace BarberOS.Application
             services.AddScoped<CreateUserUseCase>();
             services.AddScoped<UpdateUserUseCase>();
             services.AddScoped<DeleteUserUseCase>();
+
+            services.AddScoped<CreateBarberUseCase>();
+            services.AddScoped<GetBarberByIdUseCase>();
+            services.AddScoped<ListBarbersByBarbershopUseCase>();
+            services.AddScoped<UpdateScheduleUseCase>();
+            services.AddScoped<GetAvailabilityUseCase>();
+            services.AddScoped<GetMyBalanceUseCase>();
 
             services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 

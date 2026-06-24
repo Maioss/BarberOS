@@ -11,6 +11,7 @@ namespace BarberOS.Infrastructure.Persistence
 
         public DbSet<UserDbModel> Users => Set<UserDbModel>();
         public DbSet<BarbershopDbModel> Barbershops => Set<BarbershopDbModel>();
+        public DbSet<BarberDbModel> Barbers => Set<BarberDbModel>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

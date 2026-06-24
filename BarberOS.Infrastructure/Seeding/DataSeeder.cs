@@ -66,6 +66,52 @@ namespace BarberOS.Infrastructure.Seeding
                 await db.Users.AddAsync(UserMapper.ToDbModel(client2), ct);
                 await db.SaveChangesAsync(ct);
             }
+
+            if (!await db.Barbers.AnyAsync(ct))
+            {
+                var branches = await db.Barbershops
+                    .Where(b => !b.IsMain && b.IsActive)
+                    .OrderBy(b => b.CreatedAt)
+                    .ToListAsync(ct);
+
+                var barberUser1 = User.Create(
+                    email: "barber1@barberos.com",
+                    passwordHash: hasher.Hash("Barber123!"),
+                    fullName: "Andres Barber",
+                    role: Role.Barber,
+                    phone: "+573001234567",
+                    barbershopId: branches[0].Id);
+
+                var barberUser2 = User.Create(
+                    email: "barber2@barberos.com",
+                    passwordHash: hasher.Hash("Barber123!"),
+                    fullName: "Luis Barber",
+                    role: Role.Barber,
+                    phone: "+573007654321",
+                    barbershopId: branches[1].Id);
+
+                var barberUser3 = User.Create(
+                    email: "barber3@barberos.com",
+                    passwordHash: hasher.Hash("Barber123!"),
+                    fullName: "Maria Barber",
+                    role: Role.Barber,
+                    phone: "+573009876543",
+                    barbershopId: branches[2].Id);
+
+                await db.Users.AddAsync(UserMapper.ToDbModel(barberUser1), ct);
+                await db.Users.AddAsync(UserMapper.ToDbModel(barberUser2), ct);
+                await db.Users.AddAsync(UserMapper.ToDbModel(barberUser3), ct);
+                await db.SaveChangesAsync(ct);
+
+                var barber1 = Barber.Create(barberUser1.Id, branches[0].Id);
+                var barber2 = Barber.Create(barberUser2.Id, branches[1].Id);
+                var barber3 = Barber.Create(barberUser3.Id, branches[2].Id);
+
+                await db.Barbers.AddAsync(BarberMapper.ToDbModel(barber1), ct);
+                await db.Barbers.AddAsync(BarberMapper.ToDbModel(barber2), ct);
+                await db.Barbers.AddAsync(BarberMapper.ToDbModel(barber3), ct);
+                await db.SaveChangesAsync(ct);
+            }
         }
     }
 }
