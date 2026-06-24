@@ -13,7 +13,7 @@ namespace BarberOS.Infrastructure.Seeding
         {
             await db.Database.MigrateAsync(ct);
 
-            if (!await db.Users.AnyAsync(ct))
+            if (!await db.Users.AnyAsync(u => u.Role == (int)Role.SuperAdmin, ct))
             {
                 var superAdmin = User.Create(
                     email: "superadmin@barberos.com",
@@ -43,6 +43,27 @@ namespace BarberOS.Infrastructure.Seeding
                 await db.Barbershops.AddAsync(BarbershopMapper.ToDbModel(medellinNorte), ct);
                 await db.Barbershops.AddAsync(BarbershopMapper.ToDbModel(bogotaUsaquen), ct);
                 await db.Barbershops.AddAsync(BarbershopMapper.ToDbModel(bogotaKennedy), ct);
+                await db.SaveChangesAsync(ct);
+            }
+
+            if (!await db.Users.AnyAsync(u => u.Role == (int)Role.Admin, ct))
+            {
+                var firstMain = await db.Barbershops.FirstAsync(b => b.IsMain, ct);
+
+                var admin = User.Create(
+                    email: "admin@barberos.com",
+                    passwordHash: hasher.Hash("Admin123!"),
+                    fullName: "Admin Demo",
+                    role: Role.Admin,
+                    phone: null,
+                    barbershopId: firstMain.Id);
+
+                var client1 = User.Create("cliente1@demo.com", hasher.Hash("Cliente123!"), "Carlos Cliente", Role.Client);
+                var client2 = User.Create("cliente2@demo.com", hasher.Hash("Cliente123!"), "Camila Cliente", Role.Client);
+
+                await db.Users.AddAsync(UserMapper.ToDbModel(admin), ct);
+                await db.Users.AddAsync(UserMapper.ToDbModel(client1), ct);
+                await db.Users.AddAsync(UserMapper.ToDbModel(client2), ct);
                 await db.SaveChangesAsync(ct);
             }
         }

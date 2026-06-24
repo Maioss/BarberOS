@@ -1,8 +1,8 @@
-﻿using BarberOS.Domain.Enums;
+using BarberOS.Domain.Enums;
+using BarberOS.Domain.Exceptions;
 
 namespace BarberOS.Domain.Entities
 {
-
     public class User
     {
         public Guid Id { get; private set; }
@@ -20,6 +20,8 @@ namespace BarberOS.Domain.Entities
 
         public static User Create(string email, string passwordHash, string fullName, Role role, string? phone = null, Guid? barbershopId = null)
         {
+            ValidateRoleBarbershop(role, barbershopId);
+
             var now = DateTime.UtcNow;
             return new User
             {
@@ -43,6 +45,14 @@ namespace BarberOS.Domain.Entities
             UpdatedAt = DateTime.UtcNow;
         }
 
+        public void ChangeRole(Role newRole, Guid? barbershopId)
+        {
+            ValidateRoleBarbershop(newRole, barbershopId);
+            Role = newRole;
+            BarbershopId = barbershopId;
+            UpdatedAt = DateTime.UtcNow;
+        }
+
         public void ChangePassword(string newPasswordHash)
         {
             PasswordHash = newPasswordHash;
@@ -53,6 +63,17 @@ namespace BarberOS.Domain.Entities
         {
             IsActive = false;
             UpdatedAt = DateTime.UtcNow;
+        }
+
+        private static void ValidateRoleBarbershop(Role role, Guid? barbershopId)
+        {
+            var requiresBarbershop = role == Role.Barber || role == Role.Admin;
+
+            if (requiresBarbershop && barbershopId is null)
+                throw new BusinessRuleException("Un Admin o Barber debe estar asociado a una barbería.");
+
+            if (!requiresBarbershop && barbershopId is not null)
+                throw new BusinessRuleException("Un SuperAdmin o Client no debe tener barbería asociada.");
         }
     }
 }
