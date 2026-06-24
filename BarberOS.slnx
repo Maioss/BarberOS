@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="BarberOS.Api/BarberOS.Api.csproj" />
+  <Project Path="BarberOS.Application/BarberOS.Application.csproj" />
+  <Project Path="BarberOS.Domain/BarberOS.Domain.csproj" />
+  <Project Path="BarberOS.Infrastructure/BarberOS.Infrastructure.csproj" />
+</Solution>
