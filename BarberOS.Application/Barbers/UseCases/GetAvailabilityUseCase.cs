@@ -1,5 +1,6 @@
 using BarberOS.Application.Barbers.DTOs;
 using BarberOS.Application.Shared;
+using BarberOS.Domain.Enums;
 using BarberOS.Domain.Exceptions;
 
 namespace BarberOS.Application.Barbers.UseCases
@@ -11,8 +12,13 @@ namespace BarberOS.Application.Barbers.UseCases
         private static readonly TimeSpan SlotDuration = TimeSpan.FromMinutes(30);
 
         private readonly IBarberRepository _barbers;
+        private readonly IAppointmentRepository _appointments;
 
-        public GetAvailabilityUseCase(IBarberRepository barbers) => _barbers = barbers;
+        public GetAvailabilityUseCase(IBarberRepository barbers, IAppointmentRepository appointments)
+        {
+            _barbers = barbers;
+            _appointments = appointments;
+        }
 
         public async Task<AvailabilityDto> ExecuteAsync(Guid barberId, DateOnly date, CancellationToken ct = default)
         {
@@ -32,7 +38,11 @@ namespace BarberOS.Application.Barbers.UseCases
                 );
             }
 
-            var slots = BuildBaseSlots(barber.LunchStart, barber.LunchEnd);
+            var existing = await _appointments.ListByBarberAndDateAsync(
+                barber.Id, date, AppointmentStatus.Confirmed, ct);
+
+            var bookedIntervals = existing.Select(a => (a.StartTime, a.EndTime)).ToList();
+            var slots = BuildSlots(barber.LunchStart, barber.LunchEnd, bookedIntervals);
 
             return new AvailabilityDto(
                 barber.Id, date, IsWorkingDay: true,
@@ -41,7 +51,10 @@ namespace BarberOS.Application.Barbers.UseCases
             );
         }
 
-        private static List<SlotDto> BuildBaseSlots(TimeOnly lunchStart, TimeOnly lunchEnd)
+        private static List<SlotDto> BuildSlots(
+            TimeOnly lunchStart,
+            TimeOnly lunchEnd,
+            List<(TimeOnly Start, TimeOnly End)> bookedIntervals)
         {
             var slots = new List<SlotDto>();
             var cursor = WorkdayStart;
@@ -51,7 +64,11 @@ namespace BarberOS.Application.Barbers.UseCases
                 var slotEnd = cursor.Add(SlotDuration);
                 var overlapsLunch = cursor < lunchEnd && slotEnd > lunchStart;
                 if (!overlapsLunch)
-                    slots.Add(new SlotDto(cursor, slotEnd));
+                {
+                    var isBooked = bookedIntervals.Any(b => cursor < b.End && b.Start < slotEnd);
+                    if (!isBooked)
+                        slots.Add(new SlotDto(cursor, slotEnd));
+                }
                 cursor = slotEnd;
             }
 
