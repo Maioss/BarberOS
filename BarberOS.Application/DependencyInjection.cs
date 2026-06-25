@@ -3,6 +3,7 @@ using BarberOS.Application.Auth.UseCases;
 using BarberOS.Application.Barbershops.UseCases;
 using BarberOS.Application.Barbers.UseCases;
 using BarberOS.Application.Appointments.UseCases;
+using BarberOS.Application.Metrics.UseCases;
 using BarberOS.Application.Payments.UseCases;
 using BarberOS.Application.Services.UseCases;
 using BarberOS.Application.Users.UseCases;
@@ -57,6 +58,9 @@ namespace BarberOS.Application
             services.AddScoped<ListPaymentsUseCase>();
             services.AddScoped<ListMyPaymentsUseCase>();
             services.AddScoped<RefundPaymentUseCase>();
+
+            services.AddScoped<GetBarbershopMetricsUseCase>();
+            services.AddScoped<GetMyBarberMetricsUseCase>();
 
             services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 
