@@ -27,6 +27,7 @@ namespace BarberOS.Infrastructure
             services.AddScoped<IBarberRepository, BarberRepository>();
             services.AddScoped<IServiceRepository, ServiceRepository>();
             services.AddScoped<IAppointmentRepository, AppointmentRepository>();
+            services.AddScoped<IPaymentRepository, PaymentRepository>();
             services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
 
             services.Configure<JwtSettings>(configuration.GetSection("Jwt"));

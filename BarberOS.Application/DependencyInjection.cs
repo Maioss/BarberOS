@@ -3,6 +3,7 @@ using BarberOS.Application.Auth.UseCases;
 using BarberOS.Application.Barbershops.UseCases;
 using BarberOS.Application.Barbers.UseCases;
 using BarberOS.Application.Appointments.UseCases;
+using BarberOS.Application.Payments.UseCases;
 using BarberOS.Application.Services.UseCases;
 using BarberOS.Application.Users.UseCases;
 using FluentValidation;
@@ -50,6 +51,12 @@ namespace BarberOS.Application
             services.AddScoped<ListAppointmentsUseCase>();
             services.AddScoped<CancelAppointmentUseCase>();
             services.AddScoped<CompleteAppointmentUseCase>();
+
+            services.AddScoped<RegisterPaymentUseCase>();
+            services.AddScoped<GetPaymentByIdUseCase>();
+            services.AddScoped<ListPaymentsUseCase>();
+            services.AddScoped<ListMyPaymentsUseCase>();
+            services.AddScoped<RefundPaymentUseCase>();
 
             services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 

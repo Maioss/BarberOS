@@ -73,6 +73,15 @@ namespace BarberOS.Domain.Entities
             UpdatedAt = DateTime.UtcNow;
         }
 
+        public void DeductFromBalance(decimal amount)
+        {
+            if (amount <= 0)
+                throw new BusinessRuleException("El monto a deducir del saldo debe ser positivo.");
+
+            Balance -= amount;
+            UpdatedAt = DateTime.UtcNow;
+        }
+
         public void Deactivate()
         {
             IsActive = false;
