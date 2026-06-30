@@ -32,6 +32,8 @@ namespace BarberOS.Application
             services.AddScoped<ListUsersUseCase>();
             services.AddScoped<CreateUserUseCase>();
             services.AddScoped<UpdateUserUseCase>();
+            services.AddScoped<UpdateMyProfileUseCase>();
+            services.AddScoped<UpdateMyPhotoUseCase>();
             services.AddScoped<DeleteUserUseCase>();
 
             services.AddScoped<CreateBarberUseCase>();

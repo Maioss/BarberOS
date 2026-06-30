@@ -7,6 +7,7 @@ namespace BarberOS.Application.Users.DTOs
         string Email,
         string FullName,
         string? Phone,
+        string? PhotoUrl,
         Role Role,
         Guid? BarbershopId,
         bool IsActive,

@@ -35,7 +35,7 @@ namespace BarberOS.Application.Auth.UseCases
             await _uow.SaveChangesAsync(ct);
 
             var token = _jwt.Generate(user);
-            var info = new UserInfo(user.Id, user.Email, user.FullName, user.Role, user.BarbershopId);
+            var info = new UserInfo(user.Id, user.Email, user.FullName, user.Role, user.BarbershopId, user.PhotoUrl);
             return new AuthResponse(token, info);
         }
     }

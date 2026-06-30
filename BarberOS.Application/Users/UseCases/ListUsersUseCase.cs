@@ -14,7 +14,7 @@ namespace BarberOS.Application.Users.UseCases
             var page = await _users.ListAsync(filter, ct);
 
             var items = page.Items.Select(u => new UserDto(
-                u.Id, u.Email, u.FullName, u.Phone, u.Role, u.BarbershopId, u.IsActive, u.CreatedAt
+                u.Id, u.Email, u.FullName, u.Phone, u.PhotoUrl, u.Role, u.BarbershopId, u.IsActive, u.CreatedAt
             )).ToList();
 
             return new PagedResult<UserDto>(items, page.Page, page.PageSize, page.TotalCount);

@@ -24,7 +24,7 @@ namespace BarberOS.Application.Auth.UseCases
             var user = await _users.GetByIdAsync(_current.UserId.Value, ct)
                 ?? throw new NotFoundException("Usuario no encontrado.");
 
-            return new UserInfo(user.Id, user.Email, user.FullName, user.Role, user.BarbershopId);
+            return new UserInfo(user.Id, user.Email, user.FullName, user.Role, user.BarbershopId, user.PhotoUrl);
         }
     }
 }

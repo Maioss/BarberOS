@@ -61,6 +61,28 @@ namespace BarberOS.Api.Controllers
             return Ok(ApiResponse<UserDto>.Ok(result, "Usuario actualizado."));
         }
 
+        [HttpPut("me")]
+        public async Task<ActionResult<ApiResponse<UserDto>>> UpdateMyProfile(
+            [FromBody] UpdateMyProfileRequest request,
+            [FromServices] IValidator<UpdateMyProfileRequest> validator,
+            [FromServices] UpdateMyProfileUseCase useCase,
+            CancellationToken ct)
+        {
+            await validator.ValidateAndThrowAsync(request, ct);
+            var result = await useCase.ExecuteAsync(request, ct);
+            return Ok(ApiResponse<UserDto>.Ok(result, "Perfil actualizado."));
+        }
+
+        [HttpPut("me/photo")]
+        public async Task<ActionResult<ApiResponse<UserDto>>> UpdateMyPhoto(
+            [FromBody] UpdateMyPhotoRequest request,
+            [FromServices] UpdateMyPhotoUseCase useCase,
+            CancellationToken ct)
+        {
+            var result = await useCase.ExecuteAsync(request, ct);
+            return Ok(ApiResponse<UserDto>.Ok(result, "Foto actualizada."));
+        }
+
         [HttpDelete("{id:guid}")]
         [Authorize(Roles = "SuperAdmin,Admin")]
         public async Task<IActionResult> Delete(

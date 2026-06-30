@@ -46,7 +46,7 @@ namespace BarberOS.Application.Users.UseCases
             _users.Update(user);
             await _uow.SaveChangesAsync(ct);
 
-            return new UserDto(user.Id, user.Email, user.FullName, user.Phone, user.Role, user.BarbershopId, user.IsActive, user.CreatedAt);
+            return new UserDto(user.Id, user.Email, user.FullName, user.Phone, user.PhotoUrl, user.Role, user.BarbershopId, user.IsActive, user.CreatedAt);
         }
     }
 }

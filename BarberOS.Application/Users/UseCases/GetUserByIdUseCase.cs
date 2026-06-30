@@ -15,7 +15,7 @@ namespace BarberOS.Application.Users.UseCases
             var u = await _users.GetByIdAsync(id, ct)
                 ?? throw NotFoundException.For("usuario", id);
 
-            return new UserDto(u.Id, u.Email, u.FullName, u.Phone, u.Role, u.BarbershopId, u.IsActive, u.CreatedAt);
+            return new UserDto(u.Id, u.Email, u.FullName, u.Phone, u.PhotoUrl, u.Role, u.BarbershopId, u.IsActive, u.CreatedAt);
         }
     }
 }

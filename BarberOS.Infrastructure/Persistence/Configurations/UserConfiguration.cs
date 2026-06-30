@@ -19,6 +19,7 @@ namespace BarberOS.Infrastructure.Persistence.Configurations
             builder.Property(x => x.PasswordHash).IsRequired().HasMaxLength(255);
             builder.Property(x => x.FullName).IsRequired().HasMaxLength(120);
             builder.Property(x => x.Phone).HasMaxLength(30);
+            builder.Property(x => x.PhotoUrl).HasMaxLength(2048);
             builder.Property(x => x.Role).IsRequired();
             builder.Property(x => x.IsActive).IsRequired();
             builder.Property(x => x.CreatedAt).IsRequired();

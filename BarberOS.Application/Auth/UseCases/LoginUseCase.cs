@@ -29,7 +29,7 @@ namespace BarberOS.Application.Auth.UseCases
                 throw new UnauthorizedException("Credenciales inválidas.");
 
             var token = _jwt.Generate(user);
-            var info = new UserInfo(user.Id, user.Email, user.FullName, user.Role, user.BarbershopId);
+            var info = new UserInfo(user.Id, user.Email, user.FullName, user.Role, user.BarbershopId, user.PhotoUrl);
             return new AuthResponse(token, info);
         }
     }

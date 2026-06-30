@@ -15,6 +15,7 @@ namespace BarberOS.Infrastructure.Persistence.Mappers
             PasswordHash = user.PasswordHash,
             FullName = user.FullName,
             Phone = user.Phone,
+            PhotoUrl = user.PhotoUrl,
             Role = (int)user.Role,
             BarbershopId = user.BarbershopId,
             IsActive = user.IsActive,
@@ -31,6 +32,7 @@ namespace BarberOS.Infrastructure.Persistence.Mappers
             SetPrivate(user, t, nameof(User.PasswordHash), db.PasswordHash);
             SetPrivate(user, t, nameof(User.FullName), db.FullName);
             SetPrivate(user, t, nameof(User.Phone), db.Phone);
+            SetPrivate(user, t, nameof(User.PhotoUrl), db.PhotoUrl);
             SetPrivate(user, t, nameof(User.Role), (Role)db.Role);
             SetPrivate(user, t, nameof(User.BarbershopId), db.BarbershopId);
             SetPrivate(user, t, nameof(User.IsActive), db.IsActive);

@@ -10,6 +10,7 @@ namespace BarberOS.Domain.Entities
         public string PasswordHash { get; private set; } = null!;
         public string FullName { get; private set; } = null!;
         public string? Phone { get; private set; }
+        public string? PhotoUrl { get; private set; }
         public Role Role { get; private set; }
         public Guid? BarbershopId { get; private set; }
         public bool IsActive { get; private set; }
@@ -34,7 +35,8 @@ namespace BarberOS.Domain.Entities
                 BarbershopId = barbershopId,
                 IsActive = true,
                 CreatedAt = now,
-                UpdatedAt = now
+                UpdatedAt = now,
+                PhotoUrl = null
             };
         }
 
@@ -42,6 +44,12 @@ namespace BarberOS.Domain.Entities
         {
             FullName = fullName.Trim();
             Phone = phone?.Trim();
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        public void UpdatePhoto(string? photoUrl)
+        {
+            PhotoUrl = photoUrl;
             UpdatedAt = DateTime.UtcNow;
         }
 
