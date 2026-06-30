@@ -8,6 +8,9 @@ import { DashboardPlaceholderPage } from './pages/DashboardPlaceholderPage'
 import { ReservationPage } from './pages/ReservationPage'
 import { MySchedulePage } from './pages/MySchedulePage'
 import { MyAppointmentsPage } from './pages/MyAppointmentsPage'
+import { RegisterPage } from './pages/RegisterPage'
+import { AdminPage } from './pages/AdminPage'
+import { ProfilePage } from './pages/ProfilePage'
 import { NotFoundPage } from './pages/NotFoundPage'
 
 export default function App() {
@@ -18,6 +21,7 @@ export default function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/barbershops/:id" element={<BarbershopDetailPage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
           <Route
             path="/reserve/:barbershopId"
             element={
@@ -47,6 +51,22 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <DashboardPlaceholderPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute roles={['Admin', 'SuperAdmin']}>
+                <AdminPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <ProfilePage />
               </ProtectedRoute>
             }
           />

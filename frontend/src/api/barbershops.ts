@@ -29,3 +29,8 @@ export async function getMainBarbershops(): Promise<BarbershopDto[]> {
 export async function getBarbershopById(id: string): Promise<BarbershopDto> {
   return apiGet<BarbershopDto>(`/api/barbershops/${id}`)
 }
+
+export async function getAllBarbershops(): Promise<BarbershopDto[]> {
+  const result = await apiGet<PagedResult<BarbershopDto>>('/api/barbershops?pageSize=100')
+  return result.items
+}

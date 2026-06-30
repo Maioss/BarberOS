@@ -2,15 +2,20 @@ import { Link } from 'react-router-dom'
 import type { BarbershopDto } from '../api/barbershops'
 import { Button } from './ui/Button'
 
+const BARBER_PHOTOS = [
+  '1585747944041-78d91c7a9d82', // interior barbería clásica
+  '1503951914875-452162b0f3f1', // barbero trabajando
+  '1621605815971-fbc98d665033', // sillones de barbería
+  '1599351431202-1e0f0137899a', // pole y fachada
+]
+
 export function getBarbershopImage(index: number): string {
-  const seeds = [
-    '1585747944041-78d91c7a9d82',
-    '1503951914875-452162b0f3f1',
-    '1521490599400-e3bb31b7c89c',
-    '1622296089863-eb7fc530daa8',
-  ]
-  const seed = seeds.at(index % seeds.length) ?? seeds.at(0) ?? '1585747944041-78d91c7a9d82'
-  return `https://images.unsplash.com/photo-${seed}?w=800&q=80`
+  const id = BARBER_PHOTOS.at(index % BARBER_PHOTOS.length) ?? BARBER_PHOTOS[0]
+  return `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=800&q=80`
+}
+
+function getFallbackImage(index: number): string {
+  return `https://picsum.photos/seed/barberia-${index + 1}/800/480`
 }
 
 interface Props {
@@ -28,6 +33,7 @@ export function BarbershopCard({ barbershop, index, onReserve, showReserveButton
           src={getBarbershopImage(index)}
           alt={barbershop.name}
           className="h-48 w-full object-cover"
+          onError={e => { (e.currentTarget as HTMLImageElement).src = getFallbackImage(index) }}
         />
       </Link>
       <div className="p-4 flex flex-col gap-3 flex-1">
