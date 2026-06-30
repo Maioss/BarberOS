@@ -4,7 +4,7 @@ import { Button } from './ui/Button'
 import { useAuth } from '../auth/AuthContext'
 
 export function PublicNav() {
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
   const navigate = useNavigate()
 
   return (
@@ -17,13 +17,23 @@ export function PublicNav() {
           {user !== null ? (
             <>
               <span className="text-sm font-medium hidden sm:block">{user.fullName}</span>
+              {user.role !== 'Client' && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate('/dashboard')}
+                  className="!border-accent !text-accent hover:!bg-accent/10"
+                >
+                  Mi cuenta
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => navigate('/dashboard')}
+                onClick={logout}
                 className="!border-accent !text-accent hover:!bg-accent/10"
               >
-                Mi cuenta
+                Salir
               </Button>
             </>
           ) : (

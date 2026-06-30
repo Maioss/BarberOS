@@ -7,7 +7,7 @@ import { apiPost } from '../api/client'
 const ROLE_CLAIM = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role'
 
 interface AuthContextValue extends AuthState {
-  login: (req: LoginRequest) => Promise<void>
+  login: (req: LoginRequest) => Promise<AuthUser>
   logout: () => void
 }
 
@@ -62,10 +62,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('auth:unauthorized', onUnauthorized)
   }, [])
 
-  const login = useCallback(async (req: LoginRequest): Promise<void> => {
+  const login = useCallback(async (req: LoginRequest): Promise<AuthUser> => {
     const data = await apiPost<LoginRequest, LoginResponse>('/api/auth/login', req)
     localStorage.setItem('token', data.token)
     setState({ user: data.user, token: data.token, isLoading: false })
+    return data.user
   }, [])
 
   const logout = useCallback(() => {

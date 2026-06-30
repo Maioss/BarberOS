@@ -1,9 +1,12 @@
+import { useNavigate } from 'react-router-dom'
 import { AppShell } from '../layouts/AppShell'
 import { Card } from '../components/ui/Card'
+import { Button } from '../components/ui/Button'
 import { useAuth } from '../auth/AuthContext'
 
 export function DashboardPlaceholderPage() {
   const { user } = useAuth()
+  const navigate = useNavigate()
 
   return (
     <AppShell>
@@ -32,6 +35,16 @@ export function DashboardPlaceholderPage() {
             <div className="px-4 py-2 rounded-full bg-border text-text-muted text-sm font-medium">
               Rol: {user?.role ?? '–'}
             </div>
+            {user?.role === 'Barber' && (
+              <Button onClick={() => navigate('/my-schedule')}>
+                Ver mi agenda
+              </Button>
+            )}
+            {user?.role === 'Client' && (
+              <Button onClick={() => navigate('/my-appointments')}>
+                Ver mis reservas
+              </Button>
+            )}
           </div>
         </Card>
       </div>

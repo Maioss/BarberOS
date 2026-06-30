@@ -14,6 +14,7 @@ import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { Alert } from '../components/ui/Alert'
 import { Spinner } from '../components/ui/Spinner'
+import { InlineCalendar } from '../components/InlineCalendar'
 import { formatCurrency, formatDateWithDay, formatTime } from '../lib/format'
 
 // ─── State ────────────────────────────────────────────────────────────────────
@@ -26,6 +27,8 @@ interface ReservationState {
   isSubmitting: boolean
   submitError: string | null
   appointmentCreated: AppointmentDto | null
+  confirmedBarberName: string | null
+  confirmedBarbershopName: string | null
 }
 
 const INITIAL_STATE: ReservationState = {
@@ -36,6 +39,8 @@ const INITIAL_STATE: ReservationState = {
   isSubmitting: false,
   submitError: null,
   appointmentCreated: null,
+  confirmedBarberName: null,
+  confirmedBarbershopName: null,
 }
 
 // ─── Calendar helpers ─────────────────────────────────────────────────────────
@@ -43,12 +48,6 @@ const INITIAL_STATE: ReservationState = {
 function toDateKey(y: number, m: number, d: number): string {
   return `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
 }
-
-const WEEKDAYS = ['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa']
-const MONTHS = [
-  'enero','febrero','marzo','abril','mayo','junio',
-  'julio','agosto','septiembre','octubre','noviembre','diciembre',
-]
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -105,113 +104,6 @@ function BarberCard({
   )
 }
 
-interface CalendarProps {
-  selectedDate: string | null
-  availableDates: Set<string>
-  onSelectDate: (dateKey: string) => void
-}
-
-function Calendar({ selectedDate, availableDates, onSelectDate }: CalendarProps) {
-  const today = new Date()
-  const [viewYear, setViewYear] = useState(today.getFullYear())
-  const [viewMonth, setViewMonth] = useState(today.getMonth())
-
-  const firstDay = new Date(viewYear, viewMonth, 1).getDay()
-  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate()
-  const todayKey = toDateKey(today.getFullYear(), today.getMonth(), today.getDate())
-
-  const prevMonth = () => {
-    if (viewMonth === 0) { setViewYear(y => y - 1); setViewMonth(11) }
-    else setViewMonth(m => m - 1)
-  }
-  const nextMonth = () => {
-    if (viewMonth === 11) { setViewYear(y => y + 1); setViewMonth(0) }
-    else setViewMonth(m => m + 1)
-  }
-
-  const cells: Array<{ day: number | null; key: string | null }> = []
-  for (let i = 0; i < firstDay; i++) cells.push({ day: null, key: null })
-  for (let d = 1; d <= daysInMonth; d++) {
-    cells.push({ day: d, key: toDateKey(viewYear, viewMonth, d) })
-  }
-
-  return (
-    <div className="select-none">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <button type="button" onClick={prevMonth} className="p-1.5 rounded hover:bg-border transition-colors" aria-label="Mes anterior">
-          <svg className="w-4 h-4 text-text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="15 18 9 12 15 6" />
-          </svg>
-        </button>
-        <span className="text-sm font-display font-semibold text-text-primary capitalize">
-          {MONTHS[viewMonth]} {viewYear}
-        </span>
-        <button type="button" onClick={nextMonth} className="p-1.5 rounded hover:bg-border transition-colors" aria-label="Mes siguiente">
-          <svg className="w-4 h-4 text-text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="9 18 15 12 9 6" />
-          </svg>
-        </button>
-      </div>
-
-      {/* Weekday labels */}
-      <div className="grid grid-cols-7 mb-1">
-        {WEEKDAYS.map(wd => (
-          <div key={wd} className="text-center text-xs text-text-muted font-medium py-1">{wd}</div>
-        ))}
-      </div>
-
-      {/* Day cells */}
-      <div className="grid grid-cols-7 gap-0.5">
-        {cells.map((cell, idx) => {
-          if (!cell.day || !cell.key) {
-            return <div key={`empty-${idx}`} />
-          }
-          const key = cell.key
-          const isPast = key < todayKey
-          const isAvailable = availableDates.has(key)
-          const isSelected = key === selectedDate
-          const isToday = key === todayKey
-
-          let cls = 'w-full aspect-square flex items-center justify-center rounded text-sm transition-colors '
-          if (isPast) {
-            cls += 'text-border cursor-not-allowed'
-          } else if (isSelected) {
-            cls += 'bg-primary text-text-on-dark font-semibold cursor-pointer'
-          } else if (isAvailable) {
-            cls += 'bg-accent/15 text-text-primary font-medium cursor-pointer hover:bg-accent/30'
-          } else if (isToday) {
-            cls += 'text-primary font-semibold cursor-pointer hover:bg-border'
-          } else {
-            cls += 'text-text-muted cursor-pointer hover:bg-border'
-          }
-
-          return (
-            <button
-              key={key}
-              type="button"
-              disabled={isPast}
-              onClick={() => !isPast && onSelectDate(key)}
-              className={cls}
-              title={isAvailable ? 'Fecha disponible' : undefined}
-            >
-              {cell.day}
-            </button>
-          )
-        })}
-      </div>
-
-      <div className="flex items-center gap-4 mt-3 text-xs text-text-muted">
-        <span className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded-sm bg-accent/15 inline-block" /> Con disponibilidad
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded-sm bg-primary inline-block" /> Seleccionado
-        </span>
-      </div>
-    </div>
-  )
-}
 
 function SlotButton({
   slot,
@@ -271,7 +163,15 @@ function ServiceRow({
 
 // ─── Success Screen ───────────────────────────────────────────────────────────
 
-function SuccessScreen({ appt, onBack }: { appt: AppointmentDto; onBack: () => void }) {
+interface SuccessScreenProps {
+  appt: AppointmentDto
+  barbershopName: string
+  barberName: string
+  onBack: () => void
+}
+
+function SuccessScreen({ appt, barbershopName, barberName, onBack }: SuccessScreenProps) {
+  const navigate = useNavigate()
   return (
     <LandingLayout>
       <div className="max-w-lg mx-auto px-4 py-16 flex flex-col items-center text-center gap-6">
@@ -285,8 +185,8 @@ function SuccessScreen({ appt, onBack }: { appt: AppointmentDto; onBack: () => v
           <p className="text-text-muted mt-2">Tu reserva fue confirmada exitosamente.</p>
         </div>
         <Card className="w-full text-left flex flex-col gap-3">
-          <Detail label="Barbería" value={appt.barbershopName} />
-          <Detail label="Barbero" value={appt.barberName} />
+          <Detail label="Barbería" value={barbershopName} />
+          <Detail label="Barbero" value={barberName} />
           <Detail label="Fecha" value={formatDateWithDay(appt.date)} />
           <Detail label="Horario" value={`${formatTime(appt.startTime)} – ${formatTime(appt.endTime)}`} />
           {appt.services.length > 0 && (
@@ -307,7 +207,10 @@ function SuccessScreen({ appt, onBack }: { appt: AppointmentDto; onBack: () => v
             <span className="font-bold text-primary">{formatCurrency(appt.totalPrice)}</span>
           </div>
         </Card>
-        <Button variant="secondary" onClick={onBack}>Volver al inicio</Button>
+        <div className="flex flex-col sm:flex-row gap-3 w-full justify-center">
+          <Button onClick={() => navigate('/my-appointments')}>Ver mis reservas</Button>
+          <Button variant="secondary" onClick={onBack}>Volver al inicio</Button>
+        </div>
       </div>
     </LandingLayout>
   )
@@ -369,7 +272,7 @@ export function ReservationPage() {
   useEffect(() => { void loadInitial() }, [loadInitial])
 
   // When barber changes: fetch availability for next 30 days to mark dates
-  const loadAvailability = useCallback(async (barberId: string, bsId: string) => {
+  const loadAvailability = useCallback(async (barberId: string) => {
     const today = new Date()
     const dates = new Set<string>()
     const promises: Promise<void>[] = []
@@ -378,7 +281,7 @@ export function ReservationPage() {
       d.setDate(today.getDate() + i)
       const key = toDateKey(d.getFullYear(), d.getMonth(), d.getDate())
       promises.push(
-        getBarberAvailability(barberId, bsId, key)
+        getBarberAvailability(barberId, key)
           .then(av => { if (av.slots.length > 0) dates.add(key) })
           .catch(() => { /* skip dates that error */ }),
       )
@@ -397,17 +300,17 @@ export function ReservationPage() {
     }))
     setSlots([])
     setAvailableDates(new Set())
-    if (barbershopId) void loadAvailability(barberId, barbershopId)
+    void loadAvailability(barberId)
   }
 
   // When date changes: fetch slots for that day
   const handleSelectDate = useCallback(async (dateKey: string) => {
-    if (!state.selectedBarberId || !barbershopId) return
+    if (!state.selectedBarberId) return
     setState(s => ({ ...s, selectedDate: dateKey, selectedSlot: null }))
     setSlotsLoading(true)
     setSlotsError(false)
     try {
-      const av = await getBarberAvailability(state.selectedBarberId, barbershopId, dateKey)
+      const av = await getBarberAvailability(state.selectedBarberId, dateKey)
       setSlots(av.slots)
     } catch {
       setSlotsError(true)
@@ -415,7 +318,7 @@ export function ReservationPage() {
     } finally {
       setSlotsLoading(false)
     }
-  }, [state.selectedBarberId, barbershopId])
+  }, [state.selectedBarberId])
 
   // Load services lazily when slot is selected (only once)
   const handleSelectSlot = useCallback(async (slot: TimeSlot) => {
@@ -454,17 +357,24 @@ export function ReservationPage() {
     state.selectedSlot !== null
 
   const handleSubmit = async () => {
-    if (!canSubmit || !barbershopId || !state.selectedSlot || !state.selectedDate || !state.selectedBarberId) return
+    if (!canSubmit || !state.selectedSlot || !state.selectedDate || !state.selectedBarberId) return
+    const barberName = barbers.find(b => b.id === state.selectedBarberId)?.fullName ?? ''
+    const bsName = barbershop?.name ?? ''
     setState(s => ({ ...s, isSubmitting: true, submitError: null }))
     try {
       const appt = await createAppointment({
-        barbershopId,
         barberId: state.selectedBarberId,
         date: state.selectedDate,
         startTime: state.selectedSlot.start,
         serviceIds: state.selectedServiceIds,
       })
-      setState(s => ({ ...s, isSubmitting: false, appointmentCreated: appt }))
+      setState(s => ({
+        ...s,
+        isSubmitting: false,
+        appointmentCreated: appt,
+        confirmedBarberName: barberName,
+        confirmedBarbershopName: bsName,
+      }))
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Error al crear el turno'
       setState(s => ({ ...s, isSubmitting: false, submitError: message }))
@@ -472,7 +382,14 @@ export function ReservationPage() {
   }
 
   if (state.appointmentCreated) {
-    return <SuccessScreen appt={state.appointmentCreated} onBack={() => navigate('/')} />
+    return (
+      <SuccessScreen
+        appt={state.appointmentCreated}
+        barbershopName={state.confirmedBarbershopName ?? ''}
+        barberName={state.confirmedBarberName ?? ''}
+        onBack={() => navigate('/')}
+      />
+    )
   }
 
   return (
@@ -527,10 +444,11 @@ export function ReservationPage() {
           {state.selectedBarberId !== null && (
             <Card>
               <SectionHeader step={2} title="Elegí la fecha" />
-              <Calendar
+              <InlineCalendar
                 selectedDate={state.selectedDate}
                 availableDates={availableDates}
-                onSelectDate={(key) => void handleSelectDate(key)}
+                onSelect={(key) => void handleSelectDate(key)}
+                disablePast={true}
               />
             </Card>
           )}

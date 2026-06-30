@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { Logo } from '../components/ui/Logo'
 import { Button } from '../components/ui/Button'
@@ -22,7 +23,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="min-h-screen bg-bg-base">
       <header className="sticky top-0 z-10 bg-bg-dark text-text-on-dark">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
-          <Logo size="sm" />
+          <Link to="/"><Logo size="sm" /></Link>
           <div className="flex items-center gap-3">
             <div className="hidden md:flex flex-col items-end leading-tight">
               <span className="text-sm font-medium">{user?.fullName ?? user?.email}</span>

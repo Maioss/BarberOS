@@ -25,7 +25,8 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false)
 
   if (user) {
-    const dest = state?.from?.pathname ?? '/dashboard'
+    const defaultDest = user.role === 'Client' ? '/' : '/dashboard'
+    const dest = state?.from?.pathname ?? defaultDest
     return <Navigate to={dest} replace />
   }
 
@@ -34,8 +35,9 @@ export function LoginPage() {
     setError('')
     setLoading(true)
     try {
-      await login({ email, password })
-      const dest = state?.from?.pathname ?? '/dashboard'
+      const loggedUser = await login({ email, password })
+      const defaultDest = loggedUser.role === 'Client' ? '/' : '/dashboard'
+      const dest = state?.from?.pathname ?? defaultDest
       navigate(dest, { replace: true })
     } catch (err) {
       if (err instanceof ApiError) {

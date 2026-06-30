@@ -1,4 +1,4 @@
-import { apiGet, apiPost } from './client'
+import { apiGet, apiPost, apiPatch } from './client'
 
 export interface BarberDto {
   id: string
@@ -35,22 +35,24 @@ export interface AppointmentServiceDto {
 
 export interface AppointmentDto {
   id: string
-  barbershopId: string
-  barbershopName: string
-  barberId: string
-  barberName: string
   clientId: string
   clientName: string
-  date: string       // "YYYY-MM-DD"
-  startTime: string  // "HH:mm"
-  endTime: string    // "HH:mm"
-  status: string
+  barberId: string
+  barberName: string
+  barbershopId: string
+  date: string
+  startTime: string
+  endTime: string
   totalPrice: number
+  status: 'Confirmed' | 'Completed' | 'Cancelled'
+  notes: string | null
+  completedAt: string | null
+  cancelledAt: string | null
+  createdAt: string
   services: AppointmentServiceDto[]
 }
 
 export interface CreateAppointmentRequest {
-  barbershopId: string
   barberId: string
   date: string      // "YYYY-MM-DD"
   startTime: string // "HH:mm"
@@ -63,11 +65,10 @@ export async function getBarbersByBarbershop(barbershopId: string): Promise<Barb
 
 export async function getBarberAvailability(
   barberId: string,
-  barbershopId: string,
   date: string,
 ): Promise<AvailabilityDto> {
   return apiGet<AvailabilityDto>(
-    `/api/barbers/${barberId}/availability?barbershopId=${barbershopId}&date=${date}`,
+    `/api/barbers/${barberId}/availability?date=${date}`,
   )
 }
 
@@ -77,4 +78,25 @@ export async function getServicesByBarbershop(barbershopId: string): Promise<Ser
 
 export async function createAppointment(body: CreateAppointmentRequest): Promise<AppointmentDto> {
   return apiPost<CreateAppointmentRequest, AppointmentDto>('/api/appointments', body)
+}
+
+export interface BalanceDto {
+  barberId: string
+  balance: number
+}
+
+export async function getMyAppointments(): Promise<AppointmentDto[]> {
+  return apiGet<AppointmentDto[]>('/api/barbers/me/appointments')
+}
+
+export async function getMyBalance(): Promise<BalanceDto> {
+  return apiGet<BalanceDto>('/api/barbers/me/balance')
+}
+
+export async function completeAppointment(id: string): Promise<void> {
+  await apiPatch<object, unknown>(`/api/appointments/${id}/complete`, {})
+}
+
+export async function cancelAppointment(id: string): Promise<void> {
+  await apiPatch<object, unknown>(`/api/appointments/${id}/cancel`, {})
 }

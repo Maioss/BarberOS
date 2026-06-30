@@ -6,6 +6,8 @@ import { BarbershopDetailPage } from './pages/BarbershopDetailPage'
 import { LoginPage } from './pages/LoginPage'
 import { DashboardPlaceholderPage } from './pages/DashboardPlaceholderPage'
 import { ReservationPage } from './pages/ReservationPage'
+import { MySchedulePage } from './pages/MySchedulePage'
+import { MyAppointmentsPage } from './pages/MyAppointmentsPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 
 export default function App() {
@@ -21,6 +23,22 @@ export default function App() {
             element={
               <ProtectedRoute roles={['Client']}>
                 <ReservationPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/my-schedule"
+            element={
+              <ProtectedRoute roles={['Barber']}>
+                <MySchedulePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/my-appointments"
+            element={
+              <ProtectedRoute roles={['Client']}>
+                <MyAppointmentsPage />
               </ProtectedRoute>
             }
           />
