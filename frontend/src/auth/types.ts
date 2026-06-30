@@ -6,6 +6,7 @@ export interface AuthUser {
   fullName: string
   role: UserRole
   barbershopId: string | null
+  photoUrl: string | null
 }
 
 export interface AuthState {
@@ -27,5 +28,6 @@ export interface LoginResponse {
     fullName: string
     role: UserRole
     barbershopId: string | null
+    photoUrl: string | null
   }
 }

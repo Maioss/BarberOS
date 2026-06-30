@@ -85,8 +85,13 @@ export interface BalanceDto {
   balance: number
 }
 
-export async function getMyAppointments(): Promise<AppointmentDto[]> {
+export async function getMyBarberAppointments(): Promise<AppointmentDto[]> {
   return apiGet<AppointmentDto[]>('/api/barbers/me/appointments')
+}
+
+export async function getClientAppointments(): Promise<AppointmentDto[]> {
+  const result = await apiGet<{ items: AppointmentDto[] }>('/api/appointments/me?pageSize=200')
+  return result.items
 }
 
 export async function getMyBalance(): Promise<BalanceDto> {

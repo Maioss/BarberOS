@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { AppointmentDto } from '../api/appointments'
 import {
-  getMyAppointments,
+  getMyBarberAppointments,
   getMyBalance,
   completeAppointment,
   cancelAppointment,
@@ -33,7 +33,7 @@ export function MySchedulePage() {
     setIsLoadingBalance(true)
     setLoadError(null)
     try {
-      const [appts, bal] = await Promise.all([getMyAppointments(), getMyBalance()])
+      const [appts, bal] = await Promise.all([getMyBarberAppointments(), getMyBalance()])
       setAppointments(appts)
       setBalance(bal.balance)
     } catch (err) {

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { AppointmentDto } from '../api/appointments'
-import { getMyAppointments, cancelAppointment } from '../api/appointments'
+import { getClientAppointments, cancelAppointment } from '../api/appointments'
 import { getBarbershopById } from '../api/barbershops'
 import { AppShell } from '../layouts/AppShell'
 import { Alert } from '../components/ui/Alert'
@@ -34,7 +34,7 @@ export function MyAppointmentsPage() {
     setIsLoading(true)
     setLoadError(null)
     try {
-      const appts = await getMyAppointments()
+      const appts = await getClientAppointments()
       setAppointments(appts)
 
       const uniqueIds = [...new Set(appts.map(a => a.barbershopId))]

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { ApiError } from '../api/types'
 import { PublicShell } from '../layouts/PublicShell'
@@ -78,6 +78,12 @@ export function LoginPage() {
             Ingresar
           </Button>
         </form>
+        <p className="text-center text-sm text-text-muted mt-4">
+          ¿No tenés cuenta?{' '}
+          <Link to="/register" className="text-primary font-medium">
+            Registrate
+          </Link>
+        </p>
       </Card>
     </PublicShell>
   )

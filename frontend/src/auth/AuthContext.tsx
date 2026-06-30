@@ -2,13 +2,22 @@ import { createContext, useCallback, useContext, useEffect, useState } from 'rea
 import type { ReactNode } from 'react'
 import type { AuthState, AuthUser, LoginRequest, LoginResponse } from './types'
 import { decodeJwt, isTokenExpired } from './jwt'
-import { apiPost } from '../api/client'
+import { apiGet, apiPost } from '../api/client'
 
 const ROLE_CLAIM = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role'
+
+interface RegisterRequest {
+  email: string
+  password: string
+  fullName: string
+  phone: string | null
+}
 
 interface AuthContextValue extends AuthState {
   login: (req: LoginRequest) => Promise<AuthUser>
   logout: () => void
+  register: (req: RegisterRequest) => Promise<void>
+  updateUser: (partial: Partial<AuthUser>) => void
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -35,7 +44,17 @@ function userFromClaims(claims: Record<string, unknown>): AuthUser | null {
     fullName,
     role: role as AuthUser['role'],
     barbershopId: typeof barbershopId === 'string' ? barbershopId : null,
+    photoUrl: null,
   }
+}
+
+interface MeResponse {
+  id: string
+  email: string
+  fullName: string
+  role: AuthUser['role']
+  barbershopId: string | null
+  photoUrl: string | null
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -47,6 +66,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const claims = decodeJwt(stored)
       const user = claims ? userFromClaims(claims) : null
       setState({ user, token: stored, isLoading: false })
+
+      if (user) {
+        apiGet<MeResponse>('/api/auth/me').then((me) => {
+          setState((prev) =>
+            prev.user ? { ...prev, user: { ...prev.user, photoUrl: me.photoUrl } } : prev,
+          )
+        }).catch(() => { /* non-blocking */ })
+      }
     } else {
       localStorage.removeItem('token')
       setState({ user: null, token: null, isLoading: false })
@@ -74,8 +101,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setState({ user: null, token: null, isLoading: false })
   }, [])
 
+  const register = useCallback(async (req: RegisterRequest): Promise<void> => {
+    const data = await apiPost<RegisterRequest, LoginResponse>('/api/auth/register', req)
+    localStorage.setItem('token', data.token)
+    setState({ user: data.user, token: data.token, isLoading: false })
+  }, [])
+
+  const updateUser = useCallback((partial: Partial<AuthUser>) => {
+    setState((prev) =>
+      prev.user ? { ...prev, user: { ...prev.user, ...partial } } : prev,
+    )
+  }, [])
+
   return (
-    <AuthContext.Provider value={{ ...state, login, logout }}>
+    <AuthContext.Provider value={{ ...state, login, logout, register, updateUser }}>
       {children}
     </AuthContext.Provider>
   )
