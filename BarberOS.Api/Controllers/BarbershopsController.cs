@@ -17,6 +17,7 @@ namespace BarberOS.Api.Controllers
     public class BarbershopsController : ControllerBase
     {
         [HttpGet]
+        [AllowAnonymous]
         public async Task<ActionResult<ApiResponse<PagedResult<BarbershopDto>>>> List(
             [FromQuery] BarbershopFilter filter,
             [FromServices] ListBarbershopsUseCase useCase,
@@ -27,6 +28,7 @@ namespace BarberOS.Api.Controllers
         }
 
         [HttpGet("{id:guid}")]
+        [AllowAnonymous]
         public async Task<ActionResult<ApiResponse<BarbershopDto>>> GetById(
             Guid id,
             [FromServices] GetBarbershopByIdUseCase useCase,
@@ -37,6 +39,7 @@ namespace BarberOS.Api.Controllers
         }
 
         [HttpGet("{id:guid}/branches")]
+        [AllowAnonymous]
         public async Task<ActionResult<ApiResponse<IReadOnlyList<BarbershopDto>>>> ListBranches(
             Guid id,
             [FromServices] ListBranchesUseCase useCase,

@@ -12,6 +12,7 @@ namespace BarberOS.Application.Appointments.UseCases
         private readonly IBarberRepository _barbers;
         private readonly IBarbershopRepository _barbershops;
         private readonly IServiceRepository _services;
+        private readonly IUserRepository _users;
         private readonly IUnitOfWork _uow;
 
         public CreateAppointmentUseCase(
@@ -19,12 +20,14 @@ namespace BarberOS.Application.Appointments.UseCases
             IBarberRepository barbers,
             IBarbershopRepository barbershops,
             IServiceRepository services,
+            IUserRepository users,
             IUnitOfWork uow)
         {
             _appointments = appointments;
             _barbers = barbers;
             _barbershops = barbershops;
             _services = services;
+            _users = users;
             _uow = uow;
         }
 
@@ -106,13 +109,17 @@ namespace BarberOS.Application.Appointments.UseCases
             await _appointments.AddAsync(appointment, ct);
             await _uow.SaveChangesAsync(ct);
 
-            return MapToDto(appointment);
+            var clientUser = await _users.GetByIdAsync(clientId, ct);
+            var barberUser = await _users.GetByIdAsync(barber.UserId, ct);
+            return MapToDto(appointment, clientUser?.FullName ?? string.Empty, barberUser?.FullName ?? string.Empty);
         }
 
-        internal static AppointmentDto MapToDto(Appointment a) => new(
+        internal static AppointmentDto MapToDto(Appointment a, string clientName, string barberName) => new(
             a.Id,
             a.ClientId,
+            clientName,
             a.BarberId,
+            barberName,
             a.BarbershopId,
             a.Date,
             a.StartTime,
@@ -124,5 +131,17 @@ namespace BarberOS.Application.Appointments.UseCases
             a.CancelledAt,
             a.CreatedAt,
             a.Services.Select(s => new AppointmentServiceDto(s.ServiceId, s.ServiceName, s.Price, s.DurationMinutes)).ToList());
+
+        internal static async Task<AppointmentDto> MapToDtoAsync(
+            Appointment a,
+            IUserRepository users,
+            IBarberRepository barbers,
+            CancellationToken ct)
+        {
+            var clientUser = await users.GetByIdAsync(a.ClientId, ct);
+            var barber = await barbers.GetByIdAsync(a.BarberId, ct);
+            var barberUser = barber is not null ? await users.GetByIdAsync(barber.UserId, ct) : null;
+            return MapToDto(a, clientUser?.FullName ?? string.Empty, barberUser?.FullName ?? string.Empty);
+        }
     }
 }

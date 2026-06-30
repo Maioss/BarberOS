@@ -19,23 +19,34 @@ namespace BarberOS.Application.Barbers.UseCases
 
         public async Task<IReadOnlyList<BarberDto>> ExecuteAsync(Guid barbershopId, CancellationToken ct = default)
         {
-            _ = await _shops.GetByIdAsync(barbershopId, ct)
+            var shop = await _shops.GetByIdAsync(barbershopId, ct)
                 ?? throw NotFoundException.For("barbería", barbershopId);
 
-            var barbers = await _barbers.ListByBarbershopAsync(barbershopId, includeInactive: false, ct);
-
-            var result = new List<BarberDto>();
-            foreach (var b in barbers)
+            // For a main barbershop, aggregate barbers from all its branches.
+            // Barbers belong to specific locations (branches), not to the parent.
+            var shopIds = new List<Guid> { barbershopId };
+            if (shop.IsMain)
             {
-                var user = await _users.GetByIdAsync(b.UserId, ct);
-                if (user is null) continue;
-
-                result.Add(new BarberDto(
-                    b.Id, user.Id, user.FullName, user.Phone, b.BarbershopId,
-                    b.LunchStart, b.LunchEnd, b.GetAvailableDays(), b.IsActive
-                ));
+                var branches = await _shops.ListBranchesAsync(barbershopId, ct);
+                shopIds.AddRange(branches.Select(b => b.Id));
             }
-            return result;
+
+            var allBarbers = new List<BarberDto>();
+            foreach (var sid in shopIds)
+            {
+                var barbers = await _barbers.ListByBarbershopAsync(sid, includeInactive: false, ct);
+                foreach (var b in barbers)
+                {
+                    var user = await _users.GetByIdAsync(b.UserId, ct);
+                    if (user is null) continue;
+
+                    allBarbers.Add(new BarberDto(
+                        b.Id, user.Id, user.FullName, user.Phone, b.BarbershopId,
+                        b.LunchStart, b.LunchEnd, b.GetAvailableDays(), b.IsActive
+                    ));
+                }
+            }
+            return allBarbers;
         }
     }
 }

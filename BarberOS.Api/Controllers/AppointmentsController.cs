@@ -68,7 +68,7 @@ namespace BarberOS.Api.Controllers
         }
 
         [HttpPatch("{id:guid}/cancel")]
-        [Authorize(Roles = "SuperAdmin,Admin,Client")]
+        [Authorize(Roles = "SuperAdmin,Admin,Client,Barber")]
         public async Task<IActionResult> Cancel(
             Guid id,
             [FromServices] CancelAppointmentUseCase useCase,
@@ -81,13 +81,15 @@ namespace BarberOS.Api.Controllers
         }
 
         [HttpPatch("{id:guid}/complete")]
-        [Authorize(Roles = "SuperAdmin,Admin")]
+        [Authorize(Roles = "SuperAdmin,Admin,Barber")]
         public async Task<IActionResult> Complete(
             Guid id,
             [FromServices] CompleteAppointmentUseCase useCase,
             CancellationToken ct)
         {
-            await useCase.ExecuteAsync(id, ct);
+            var userId = _currentUser.UserId!.Value;
+            var role = _currentUser.Role!.Value;
+            await useCase.ExecuteAsync(id, userId, role, ct);
             return NoContent();
         }
     }

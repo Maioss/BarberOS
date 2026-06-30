@@ -1,4 +1,5 @@
 using BarberOS.Application.Shared;
+using BarberOS.Domain.Enums;
 using BarberOS.Domain.Exceptions;
 
 namespace BarberOS.Application.Appointments.UseCases
@@ -19,20 +20,28 @@ namespace BarberOS.Application.Appointments.UseCases
             _uow = uow;
         }
 
-        public async Task ExecuteAsync(Guid id, CancellationToken ct = default)
+        public async Task ExecuteAsync(Guid id, Guid requestingUserId, Role requestingRole, CancellationToken ct = default)
         {
             var appointment = await _appointments.GetByIdAsync(id, ct)
                 ?? throw NotFoundException.For("reserva", id);
 
+            if (requestingRole == Role.Barber)
+            {
+                var requestingBarber = await _barbers.GetByUserIdAsync(requestingUserId, ct)
+                    ?? throw NotFoundException.For("barbero", requestingUserId);
+                if (appointment.BarberId != requestingBarber.Id)
+                    throw new ForbiddenException("No tienes permiso para completar esta reserva.");
+            }
+
             appointment.Complete();
 
-            var barber = await _barbers.GetByIdAsync(appointment.BarberId, ct)
+            var assignedBarber = await _barbers.GetByIdAsync(appointment.BarberId, ct)
                 ?? throw NotFoundException.For("barbero", appointment.BarberId);
 
-            barber.AddToBalance(appointment.TotalPrice);
+            assignedBarber.AddToBalance(appointment.TotalPrice);
 
             _appointments.Update(appointment);
-            _barbers.Update(barber);
+            _barbers.Update(assignedBarber);
             await _uow.SaveChangesAsync(ct);
         }
     }

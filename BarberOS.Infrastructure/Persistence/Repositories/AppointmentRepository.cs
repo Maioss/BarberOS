@@ -77,6 +77,17 @@ namespace BarberOS.Infrastructure.Persistence.Repositories
             return await ListAsync(filter with { ClientId = clientId }, ct);
         }
 
+        public async Task<IReadOnlyList<Appointment>> ListByBarberAsync(Guid barberId, CancellationToken ct = default)
+        {
+            var list = await _db.Appointments
+                .Include(a => a.Services)
+                .Where(a => a.BarberId == barberId)
+                .OrderByDescending(a => a.Date)
+                .ThenByDescending(a => a.StartTime)
+                .ToListAsync(ct);
+            return list.Select(AppointmentMapper.ToDomain).ToList();
+        }
+
         public async Task<bool> ClientHasConflictingAppointmentAsync(
             Guid clientId, DateOnly date, TimeOnly start, TimeOnly end, CancellationToken ct = default)
         {

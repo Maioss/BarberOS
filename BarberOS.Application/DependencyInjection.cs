@@ -52,6 +52,7 @@ namespace BarberOS.Application
             services.AddScoped<ListAppointmentsUseCase>();
             services.AddScoped<CancelAppointmentUseCase>();
             services.AddScoped<CompleteAppointmentUseCase>();
+            services.AddScoped<ListBarberScheduleUseCase>();
 
             services.AddScoped<RegisterPaymentUseCase>();
             services.AddScoped<GetPaymentByIdUseCase>();

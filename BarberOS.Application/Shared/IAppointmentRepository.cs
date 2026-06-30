@@ -10,6 +10,7 @@ namespace BarberOS.Application.Shared
         Task<IReadOnlyList<Appointment>> ListByBarberAndDateAsync(Guid barberId, DateOnly date, AppointmentStatus status, CancellationToken ct = default);
         Task<PagedResult<Appointment>> ListAsync(AppointmentFilter filter, CancellationToken ct = default);
         Task<PagedResult<Appointment>> ListByClientAsync(Guid clientId, AppointmentFilter filter, CancellationToken ct = default);
+        Task<IReadOnlyList<Appointment>> ListByBarberAsync(Guid barberId, CancellationToken ct = default);
         Task<bool> ClientHasConflictingAppointmentAsync(Guid clientId, DateOnly date, TimeOnly start, TimeOnly end, CancellationToken ct = default);
         Task AddAsync(Appointment appointment, CancellationToken ct = default);
         void Update(Appointment appointment);

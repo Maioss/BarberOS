@@ -5,7 +5,9 @@ namespace BarberOS.Application.Appointments.DTOs
     public record AppointmentDto(
         Guid Id,
         Guid ClientId,
+        string ClientName,
         Guid BarberId,
+        string BarberName,
         Guid BarbershopId,
         DateOnly Date,
         TimeOnly StartTime,

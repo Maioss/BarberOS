@@ -1,4 +1,6 @@
 using BarberOS.Api.Common;
+using BarberOS.Application.Appointments.DTOs;
+using BarberOS.Application.Appointments.UseCases;
 using BarberOS.Application.Barbers.DTOs;
 using BarberOS.Application.Barbers.UseCases;
 using FluentValidation;
@@ -11,6 +13,16 @@ namespace BarberOS.Api.Controllers
     [Route("api/barbers")]
     public class BarbersController : ControllerBase
     {
+        [HttpGet("me/appointments")]
+        [Authorize(Roles = "Barber")]
+        public async Task<ActionResult<ApiResponse<IReadOnlyList<AppointmentDto>>>> GetMyAppointments(
+            [FromServices] ListBarberScheduleUseCase useCase,
+            CancellationToken ct)
+        {
+            var result = await useCase.ExecuteAsync(ct);
+            return Ok(ApiResponse<IReadOnlyList<AppointmentDto>>.Ok(result));
+        }
+
         [HttpGet("me/balance")]
         [Authorize]
         public async Task<ActionResult<ApiResponse<BalanceDto>>> GetMyBalance(
