@@ -16,8 +16,8 @@ namespace BarberOS.Infrastructure.Seeding
             if (!await db.Users.AnyAsync(u => u.Role == (int)Role.SuperAdmin, ct))
             {
                 var superAdmin = User.Create(
-                    email: "superadmin@barberos.com",
-                    passwordHash: hasher.Hash("Admin123!"),
+                    email: "samin@barberos.com",
+                    passwordHash: hasher.Hash("Pitch2026!"),
                     fullName: "Super Admin",
                     role: Role.SuperAdmin);
 
@@ -51,15 +51,15 @@ namespace BarberOS.Infrastructure.Seeding
                 var firstMain = await db.Barbershops.FirstAsync(b => b.IsMain, ct);
 
                 var admin = User.Create(
-                    email: "admin@barberos.com",
-                    passwordHash: hasher.Hash("Admin123!"),
+                    email: "admin.pitch@barberos.com",
+                    passwordHash: hasher.Hash("Pitch2026!"),
                     fullName: "Admin Demo",
                     role: Role.Admin,
                     phone: null,
                     barbershopId: firstMain.Id);
 
-                var client1 = User.Create("cliente1@demo.com", hasher.Hash("Cliente123!"), "Carlos Cliente", Role.Client);
-                var client2 = User.Create("cliente2@demo.com", hasher.Hash("Cliente123!"), "Camila Cliente", Role.Client);
+                var client1 = User.Create("cliente.pitch@barberos.com", hasher.Hash("Pitch2026!"), "Carlos Cliente", Role.Client);
+                var client2 = User.Create("cliente2@barberos.com", hasher.Hash("Pitch2026!"), "Camila Cliente", Role.Client);
 
                 await db.Users.AddAsync(UserMapper.ToDbModel(admin), ct);
                 await db.Users.AddAsync(UserMapper.ToDbModel(client1), ct);
@@ -75,25 +75,25 @@ namespace BarberOS.Infrastructure.Seeding
                     .ToListAsync(ct);
 
                 var barberUser1 = User.Create(
-                    email: "barber1@barberos.com",
-                    passwordHash: hasher.Hash("Barber123!"),
-                    fullName: "Andres Barber",
+                    email: "barbero.pitch@barberos.com",
+                    passwordHash: hasher.Hash("Pitch2026!"),
+                    fullName: "Andrés Barbero",
                     role: Role.Barber,
                     phone: "+573001234567",
                     barbershopId: branches[0].Id);
 
                 var barberUser2 = User.Create(
-                    email: "barber2@barberos.com",
-                    passwordHash: hasher.Hash("Barber123!"),
-                    fullName: "Luis Barber",
+                    email: "barbero2@barberos.com",
+                    passwordHash: hasher.Hash("Pitch2026!"),
+                    fullName: "Luis Barbero",
                     role: Role.Barber,
                     phone: "+573007654321",
                     barbershopId: branches[1].Id);
 
                 var barberUser3 = User.Create(
-                    email: "barber3@barberos.com",
-                    passwordHash: hasher.Hash("Barber123!"),
-                    fullName: "Maria Barber",
+                    email: "barbero3@barberos.com",
+                    passwordHash: hasher.Hash("Pitch2026!"),
+                    fullName: "María Barbero",
                     role: Role.Barber,
                     phone: "+573009876543",
                     barbershopId: branches[2].Id);
@@ -119,14 +119,77 @@ namespace BarberOS.Infrastructure.Seeding
 
                 foreach (var shop in principales)
                 {
-                    var corte = Service.Create(shop.Id, "Corte de cabello", "Corte clasico o moderno", 25000m, 30);
-                    var barba = Service.Create(shop.Id, "Arreglo de barba", "Perfilado y diseno", 15000m, 20);
-                    var cejas = Service.Create(shop.Id, "Cejas", "Depilacion y diseno", 8000m, 10);
+                    var corte = Service.Create(shop.Id, "Corte de cabello", "Corte clásico o moderno", 25000m, 30);
+                    var barba = Service.Create(shop.Id, "Arreglo de barba", "Perfilado y diseño", 15000m, 20);
+                    var cejas = Service.Create(shop.Id, "Cejas", "Depilación y diseño", 8000m, 10);
                     var combo = Service.Create(shop.Id, "Corte + Barba", "Combo completo", 35000m, 45);
 
                     foreach (var svc in new[] { corte, barba, cejas, combo })
                         await db.Services.AddAsync(ServiceMapper.ToDbModel(svc), ct);
                 }
+
+                await db.SaveChangesAsync(ct);
+            }
+
+            // Appointments: seeded separately — works even if users were created in a prior run
+            if (!await db.Appointments.AnyAsync(ct))
+            {
+                var today = DateOnly.FromDateTime(DateTime.Now);
+
+                var client = await db.Users.FirstOrDefaultAsync(u => u.Role == (int)Role.Client && u.IsActive, ct);
+                var barbers = await db.Barbers.Where(b => b.IsActive).Take(2).ToListAsync(ct);
+                var serviceDbs = await db.Services.Where(s => s.IsActive).Take(4).ToListAsync(ct);
+
+                if (client == null || barbers.Count == 0 || serviceDbs.Count == 0)
+                    return;
+
+                var b1 = barbers[0];
+                var b2 = barbers.Count > 1 ? barbers[1] : barbers[0];
+
+                var s1 = ServiceMapper.ToDomain(serviceDbs[0]);
+                var s2 = ServiceMapper.ToDomain(serviceDbs.Count > 1 ? serviceDbs[1] : serviceDbs[0]);
+                var s3 = ServiceMapper.ToDomain(serviceDbs.Count > 2 ? serviceDbs[2] : serviceDbs[0]);
+                var s4 = ServiceMapper.ToDomain(serviceDbs.Count > 3 ? serviceDbs[3] : serviceDbs[0]);
+
+                // ── Hoy: citas confirmadas ──────────────────────────────────
+                var apt1 = Appointment.Create(client.Id, b1.Id, b1.BarbershopId, today, new TimeOnly(9, 0), new List<Service> { s1 }.AsReadOnly());
+                var apt2 = Appointment.Create(client.Id, b1.Id, b1.BarbershopId, today, new TimeOnly(10, 0), new List<Service> { s2 }.AsReadOnly());
+                var apt3 = Appointment.Create(client.Id, b2.Id, b2.BarbershopId, today, new TimeOnly(11, 0), new List<Service> { s1, s2 }.AsReadOnly());
+
+                await db.Appointments.AddAsync(AppointmentMapper.ToDbModel(apt1), ct);
+                await db.Appointments.AddAsync(AppointmentMapper.ToDbModel(apt2), ct);
+                await db.Appointments.AddAsync(AppointmentMapper.ToDbModel(apt3), ct);
+
+                // ── Históricas: completadas ─────────────────────────────────
+                var historical = new (int daysAgo, TimeOnly time, Service svc)[]
+                {
+                    (-4,  new TimeOnly(9,  0),  s1),
+                    (-7,  new TimeOnly(10, 0),  s2),
+                    (-11, new TimeOnly(14, 0),  s3),
+                    (-15, new TimeOnly(9,  30), s4),
+                    (-20, new TimeOnly(11, 0),  s1),
+                    (-26, new TimeOnly(15, 0),  s2),
+                    (-33, new TimeOnly(9,  0),  s3),
+                    (-40, new TimeOnly(10, 30), s4),
+                    (-47, new TimeOnly(14, 0),  s1),
+                    (-55, new TimeOnly(9,  0),  s2),
+                };
+
+                foreach (var (daysAgo, time, svc) in historical)
+                {
+                    var hist = Appointment.Create(client.Id, b1.Id, b1.BarbershopId, today.AddDays(daysAgo), time, new List<Service> { svc }.AsReadOnly());
+                    hist.Complete();
+                    await db.Appointments.AddAsync(AppointmentMapper.ToDbModel(hist), ct);
+                }
+
+                // ── Canceladas: para variedad en métricas ──────────────────
+                var c1 = Appointment.Create(client.Id, b2.Id, b2.BarbershopId, today.AddDays(-3), new TimeOnly(9, 0), new List<Service> { s1 }.AsReadOnly());
+                c1.Cancel();
+                var c2 = Appointment.Create(client.Id, b1.Id, b1.BarbershopId, today.AddDays(-9), new TimeOnly(16, 0), new List<Service> { s2 }.AsReadOnly());
+                c2.Cancel();
+
+                await db.Appointments.AddAsync(AppointmentMapper.ToDbModel(c1), ct);
+                await db.Appointments.AddAsync(AppointmentMapper.ToDbModel(c2), ct);
 
                 await db.SaveChangesAsync(ct);
             }

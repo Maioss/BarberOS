@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import type { BarbershopDto } from '../../api/barbershops'
 import { getAllBarbershops } from '../../api/barbershops'
 import type { CreateAnyUserRequest } from '../../api/admin'
-import { createAnyUser } from '../../api/admin'
+import { createAnyUser, createBarberProfile } from '../../api/admin'
 import { Card } from '../ui/Card'
 import { Alert } from '../ui/Alert'
 import { Button } from '../ui/Button'
@@ -103,6 +103,9 @@ export function SuperAdminUsersTab() {
         barbershopId: requiresBarbershop ? form.barbershopId : null,
       }
       const created = await createAnyUser(req)
+      if (form.role === 'Barber') {
+        await createBarberProfile(created.id)
+      }
       setCreatedInSession(prev => [
         { id: created.id, fullName: form.fullName.trim(), role: form.role },
         ...prev,

@@ -116,6 +116,8 @@ export interface CreateBarbershopRequest {
   address: string
   city: string
   phone: string | null
+  isMain: boolean
+  parentId: string | null
 }
 
 export interface CreateAnyUserRequest {
@@ -127,8 +129,8 @@ export interface CreateAnyUserRequest {
   barbershopId: string | null
 }
 
-export async function createMainBarbershop(request: CreateBarbershopRequest): Promise<BarbershopDto> {
-  return apiPost<CreateBarbershopRequest, BarbershopDto>('/api/barbershops', request)
+export async function createMainBarbershop(request: Omit<CreateBarbershopRequest, 'isMain' | 'parentId'>): Promise<BarbershopDto> {
+  return apiPost<CreateBarbershopRequest, BarbershopDto>('/api/barbershops', { ...request, isMain: true, parentId: null })
 }
 
 export async function createAnyUser(request: CreateAnyUserRequest): Promise<{ id: string }> {
