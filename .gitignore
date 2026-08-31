@@ -367,3 +367,5 @@ frontend/dist/
 frontend/.env
 frontend/.env.local
 frontend/.env.*.local
+# Fotos de perfil subidas en runtime
+BarberOS.Api/wwwroot/photos/

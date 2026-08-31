@@ -1,6 +1,5 @@
 import { useRef, useState } from 'react'
 import { uploadAvatar, AvatarValidationError } from '../lib/uploadAvatar'
-import { updateMyPhoto } from '../api/users'
 
 interface Props {
   userId: string
@@ -22,7 +21,7 @@ export function AvatarUploader({ userId, currentUrl, initials, onUploadSuccess }
     setLoading(true)
     try {
       const publicUrl = await uploadAvatar(file, userId)
-      await updateMyPhoto({ photoUrl: publicUrl })
+      setPreview(null)
       onUploadSuccess(publicUrl)
     } catch (err) {
       setPreview(null)

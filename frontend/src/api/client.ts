@@ -60,3 +60,10 @@ export async function apiDelete<T = void>(url: string): Promise<T> {
   const res = await http.delete<ApiResponse<T>>(url)
   return res.data.data as T
 }
+
+export async function apiUpload<T>(url: string, formData: FormData): Promise<T> {
+  const res = await http.post<ApiResponse<T>>(url, formData, {
+    headers: { 'Content-Type': undefined },
+  })
+  return res.data.data as T
+}

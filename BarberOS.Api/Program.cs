@@ -3,6 +3,8 @@ using BarberOS.Api.Middleware;
 using BarberOS.Api.Services;
 using BarberOS.Application;
 using BarberOS.Application.Shared;
+using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.Extensions.FileProviders;
 using BarberOS.Infrastructure;
 using BarberOS.Infrastructure.Persistence;
 using BarberOS.Infrastructure.Seeding;
@@ -76,6 +78,14 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+var webRootPath = app.Environment.WebRootPath ?? Path.Combine(app.Environment.ContentRootPath, "wwwroot");
+Directory.CreateDirectory(Path.Combine(webRootPath, "photos"));
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(webRootPath),
+    RequestPath = ""
+});
 
 app.UseCors("Frontend");
 
