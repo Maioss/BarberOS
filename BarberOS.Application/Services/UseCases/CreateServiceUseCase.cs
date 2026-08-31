@@ -9,12 +9,18 @@ namespace BarberOS.Application.Services.UseCases
     {
         private readonly IServiceRepository _services;
         private readonly IBarbershopRepository _shops;
+        private readonly TenantScope _scope;
         private readonly IUnitOfWork _uow;
 
-        public CreateServiceUseCase(IServiceRepository services, IBarbershopRepository shops, IUnitOfWork uow)
+        public CreateServiceUseCase(
+            IServiceRepository services,
+            IBarbershopRepository shops,
+            TenantScope scope,
+            IUnitOfWork uow)
         {
             _services = services;
             _shops = shops;
+            _scope = scope;
             _uow = uow;
         }
 
@@ -22,6 +28,8 @@ namespace BarberOS.Application.Services.UseCases
         {
             var shop = await _shops.GetByIdAsync(request.BarbershopId, ct)
                 ?? throw NotFoundException.For("barbería", request.BarbershopId);
+
+            await _scope.EnsureInScopeAsync(shop.Id, ct);
 
             if (!shop.IsActive)
                 throw new BusinessRuleException("La barbería está desactivada.");

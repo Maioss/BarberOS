@@ -17,8 +17,8 @@ export interface UpdateMyPhotoRequest {
   photoUrl: string | null
 }
 
-export function getMyProfile(userId: string) {
-  return apiGet<MyProfileResponse>(`/api/users/${userId}`)
+export function getMyProfile() {
+  return apiGet<MyProfileResponse>('/api/users/me')
 }
 
 export function updateMyProfile(req: UpdateMyProfileRequest) {

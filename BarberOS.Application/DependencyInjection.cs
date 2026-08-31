@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using BarberOS.Application.Shared;
 using BarberOS.Application.Auth.UseCases;
 using BarberOS.Application.Barbershops.UseCases;
 using BarberOS.Application.Barbers.UseCases;
@@ -17,6 +18,7 @@ namespace BarberOS.Application
     {
         public static IServiceCollection AddApplication(this IServiceCollection services)
         {
+            services.AddScoped<TenantScope>();
             services.AddScoped<LoginUseCase>();
             services.AddScoped<RegisterClientUseCase>();
             services.AddScoped<GetCurrentUserUseCase>();
@@ -29,6 +31,7 @@ namespace BarberOS.Application
             services.AddScoped<DeleteBarbershopUseCase>();
 
             services.AddScoped<GetUserByIdUseCase>();
+            services.AddScoped<GetMyProfileUseCase>();
             services.AddScoped<ListUsersUseCase>();
             services.AddScoped<CreateUserUseCase>();
             services.AddScoped<UpdateUserUseCase>();
@@ -39,6 +42,7 @@ namespace BarberOS.Application
             services.AddScoped<CreateBarberUseCase>();
             services.AddScoped<GetBarberByIdUseCase>();
             services.AddScoped<ListBarbersByBarbershopUseCase>();
+            services.AddScoped<ListBarbersForAdminUseCase>();
             services.AddScoped<UpdateScheduleUseCase>();
             services.AddScoped<GetAvailabilityUseCase>();
             services.AddScoped<GetMyBalanceUseCase>();

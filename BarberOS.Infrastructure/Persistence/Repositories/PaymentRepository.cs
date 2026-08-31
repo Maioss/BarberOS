@@ -40,6 +40,12 @@ namespace BarberOS.Infrastructure.Persistence.Repositories
             if (filter.BarbershopId.HasValue)
                 query = query.Where(p => p.BarbershopId == filter.BarbershopId.Value);
 
+            if (filter.BarbershopIds is { Count: > 0 })
+            {
+                var siteIds = filter.BarbershopIds.ToList();
+                query = query.Where(p => siteIds.Contains(p.BarbershopId));
+            }
+
             if (filter.Status.HasValue)
                 query = query.Where(p => p.Status == (int)filter.Status.Value);
 

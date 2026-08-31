@@ -18,7 +18,7 @@ export function ProfilePage() {
 
   useEffect(() => {
     if (!user) return
-    getMyProfile(user.id).then((profile) => {
+    getMyProfile().then((profile) => {
       setForm({ fullName: profile.fullName, phone: profile.phone ?? '' })
     }).catch(() => { /* keep defaults */ })
   }, [user])

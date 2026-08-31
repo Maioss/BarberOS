@@ -33,15 +33,26 @@ namespace BarberOS.Api.Controllers
             return Ok(ApiResponse<BalanceDto>.Ok(result));
         }
 
+        [HttpGet]
+        [Authorize(Roles = "SuperAdmin,Admin")]
+        public async Task<ActionResult<ApiResponse<IReadOnlyList<BarberDto>>>> ListForAdmin(
+            [FromQuery] Guid barbershopId,
+            [FromServices] ListBarbersForAdminUseCase useCase,
+            CancellationToken ct)
+        {
+            var result = await useCase.ExecuteAsync(barbershopId, ct);
+            return Ok(ApiResponse<IReadOnlyList<BarberDto>>.Ok(result));
+        }
+
         [HttpGet("{id:guid}")]
         [AllowAnonymous]
-        public async Task<ActionResult<ApiResponse<BarberDto>>> GetById(
+        public async Task<ActionResult<ApiResponse<PublicBarberDto>>> GetById(
             Guid id,
             [FromServices] GetBarberByIdUseCase useCase,
             CancellationToken ct)
         {
             var result = await useCase.ExecuteAsync(id, ct);
-            return Ok(ApiResponse<BarberDto>.Ok(result));
+            return Ok(ApiResponse<PublicBarberDto>.Ok(result));
         }
 
         [HttpPost]

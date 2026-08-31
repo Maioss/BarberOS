@@ -10,13 +10,20 @@ namespace BarberOS.Application.Barbers.UseCases
         private readonly IBarberRepository _barbers;
         private readonly IUserRepository _users;
         private readonly ICurrentUserService _current;
+        private readonly TenantScope _scope;
         private readonly IUnitOfWork _uow;
 
-        public UpdateScheduleUseCase(IBarberRepository barbers, IUserRepository users, ICurrentUserService current, IUnitOfWork uow)
+        public UpdateScheduleUseCase(
+            IBarberRepository barbers,
+            IUserRepository users,
+            ICurrentUserService current,
+            TenantScope scope,
+            IUnitOfWork uow)
         {
             _barbers = barbers;
             _users = users;
             _current = current;
+            _scope = scope;
             _uow = uow;
         }
 
@@ -30,6 +37,10 @@ namespace BarberOS.Application.Barbers.UseCases
 
             if (!isOwner && !isAdmin)
                 throw new ForbiddenException("No tienes permiso para modificar este horario.");
+
+            // Un Admin solo manda sobre los barberos de su propia barberia.
+            if (!isOwner)
+                await _scope.EnsureInScopeAsync(barber.BarbershopId, ct);
 
             barber.UpdateSchedule(request.LunchStart, request.LunchEnd, request.AvailableDays);
             _barbers.Update(barber);

@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using BarberOS.Application.Shared;
 using BarberOS.Domain.Enums;
 
@@ -27,6 +27,15 @@ namespace BarberOS.Api.Services
             {
                 var role = _accessor.HttpContext?.User.FindFirstValue(ClaimTypes.Role);
                 return Enum.TryParse<Role>(role, out var parsed) ? parsed : null;
+            }
+        }
+
+        public Guid? BarbershopId
+        {
+            get
+            {
+                var id = _accessor.HttpContext?.User.FindFirstValue("barbershopId");
+                return Guid.TryParse(id, out var parsed) ? parsed : null;
             }
         }
 

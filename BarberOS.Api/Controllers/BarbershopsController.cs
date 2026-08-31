@@ -50,6 +50,7 @@ namespace BarberOS.Api.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "SuperAdmin")]
         public async Task<ActionResult<ApiResponse<BarbershopDto>>> Create(
             [FromBody] CreateBarbershopRequest request,
             [FromServices] CreateBarbershopUseCase useCase,
@@ -60,6 +61,7 @@ namespace BarberOS.Api.Controllers
         }
 
         [HttpPut("{id:guid}")]
+        [Authorize(Roles = "SuperAdmin")]
         public async Task<ActionResult<ApiResponse<BarbershopDto>>> Update(
             Guid id,
             [FromBody] UpdateBarbershopRequest request,
@@ -71,6 +73,7 @@ namespace BarberOS.Api.Controllers
         }
 
         [HttpDelete("{id:guid}")]
+        [Authorize(Roles = "SuperAdmin")]
         public async Task<ActionResult<ApiResponse<object>>> Delete(
             Guid id,
             [FromServices] DeleteBarbershopUseCase useCase,
@@ -93,13 +96,13 @@ namespace BarberOS.Api.Controllers
 
         [HttpGet("{id:guid}/barbers")]
         [AllowAnonymous]
-        public async Task<ActionResult<ApiResponse<IReadOnlyList<BarberDto>>>> GetBarbers(
+        public async Task<ActionResult<ApiResponse<IReadOnlyList<PublicBarberDto>>>> GetBarbers(
             Guid id,
             [FromServices] ListBarbersByBarbershopUseCase useCase,
             CancellationToken ct)
         {
             var result = await useCase.ExecuteAsync(id, ct);
-            return Ok(ApiResponse<IReadOnlyList<BarberDto>>.Ok(result));
+            return Ok(ApiResponse<IReadOnlyList<PublicBarberDto>>.Ok(result));
         }
     }
 }

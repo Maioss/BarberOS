@@ -33,6 +33,7 @@ namespace BarberOS.Application.Appointments.UseCases
 
         public async Task<AppointmentDto> ExecuteAsync(
             Guid requestingUserId,
+            Role requestingRole,
             CreateAppointmentRequest request,
             CancellationToken ct = default)
         {
@@ -90,7 +91,26 @@ namespace BarberOS.Application.Appointments.UseCases
             if (conflict)
                 throw new BusinessRuleException("El barbero ya tiene una reserva confirmada en ese horario.");
 
-            var clientId = request.ClientId ?? requestingUserId;
+            var clientId = requestingUserId;
+
+            // Reservar a nombre de otro solo tiene sentido para el mostrador; un cliente
+            // que manda ClientId estaria llenandole la agenda a un tercero.
+            if (request.ClientId is not null && request.ClientId.Value != requestingUserId)
+            {
+                if (requestingRole is not (Role.Admin or Role.SuperAdmin))
+                    throw new ForbiddenException("No puedes reservar a nombre de otro usuario.");
+
+                var target = await _users.GetByIdAsync(request.ClientId.Value, ct)
+                    ?? throw NotFoundException.For("cliente", request.ClientId.Value);
+
+                if (target.Role != Role.Client)
+                    throw new BusinessRuleException("Solo se puede reservar a nombre de un cliente.");
+
+                if (!target.IsActive)
+                    throw new BusinessRuleException("El cliente está desactivado.");
+
+                clientId = target.Id;
+            }
 
             var clientConflict = await _appointments.ClientHasConflictingAppointmentAsync(
                 clientId, request.Date, request.StartTime, endTime, ct);

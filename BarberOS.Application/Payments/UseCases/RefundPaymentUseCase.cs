@@ -7,15 +7,18 @@ namespace BarberOS.Application.Payments.UseCases
     {
         private readonly IPaymentRepository _payments;
         private readonly IBarberRepository _barbers;
+        private readonly TenantScope _scope;
         private readonly IUnitOfWork _uow;
 
         public RefundPaymentUseCase(
             IPaymentRepository payments,
             IBarberRepository barbers,
+            TenantScope scope,
             IUnitOfWork uow)
         {
             _payments = payments;
             _barbers = barbers;
+            _scope = scope;
             _uow = uow;
         }
 
@@ -23,6 +26,8 @@ namespace BarberOS.Application.Payments.UseCases
         {
             var payment = await _payments.GetByIdAsync(paymentId, ct)
                 ?? throw NotFoundException.For("pago", paymentId);
+
+            await _scope.EnsureInScopeAsync(payment.BarbershopId, ct);
 
             var barber = await _barbers.GetByIdAsync(payment.BarberId, ct)
                 ?? throw NotFoundException.For("barbero", payment.BarberId);

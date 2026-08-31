@@ -1,4 +1,4 @@
-﻿using BarberOS.Domain.Enums;
+using BarberOS.Domain.Enums;
 
 namespace BarberOS.Application.Shared
 {
@@ -7,6 +7,7 @@ namespace BarberOS.Application.Shared
     {
         Guid? UserId { get; }
         Role? Role { get; }
+        Guid? BarbershopId { get; }
         bool IsAuthenticated { get; }
     }
 }

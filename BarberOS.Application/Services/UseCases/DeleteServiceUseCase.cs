@@ -6,11 +6,13 @@ namespace BarberOS.Application.Services.UseCases
     public class DeleteServiceUseCase
     {
         private readonly IServiceRepository _services;
+        private readonly TenantScope _scope;
         private readonly IUnitOfWork _uow;
 
-        public DeleteServiceUseCase(IServiceRepository services, IUnitOfWork uow)
+        public DeleteServiceUseCase(IServiceRepository services, TenantScope scope, IUnitOfWork uow)
         {
             _services = services;
+            _scope = scope;
             _uow = uow;
         }
 
@@ -18,6 +20,8 @@ namespace BarberOS.Application.Services.UseCases
         {
             var s = await _services.GetByIdAsync(id, ct)
                 ?? throw NotFoundException.For("servicio", id);
+
+            await _scope.EnsureInScopeAsync(s.BarbershopId, ct);
 
             s.Deactivate();
             _services.Update(s);

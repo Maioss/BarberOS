@@ -1,6 +1,7 @@
 using BarberOS.Application.Shared;
 using BarberOS.Application.Users.DTOs;
 using BarberOS.Domain.Entities;
+using BarberOS.Domain.Enums;
 using BarberOS.Domain.Exceptions;
 
 namespace BarberOS.Application.Users.UseCases
@@ -10,18 +11,35 @@ namespace BarberOS.Application.Users.UseCases
         private readonly IUserRepository _users;
         private readonly IBarbershopRepository _shops;
         private readonly IPasswordHasher _hasher;
+        private readonly ICurrentUserService _current;
+        private readonly TenantScope _scope;
         private readonly IUnitOfWork _uow;
 
-        public CreateUserUseCase(IUserRepository users, IBarbershopRepository shops, IPasswordHasher hasher, IUnitOfWork uow)
+        public CreateUserUseCase(
+            IUserRepository users,
+            IBarbershopRepository shops,
+            IPasswordHasher hasher,
+            ICurrentUserService current,
+            TenantScope scope,
+            IUnitOfWork uow)
         {
             _users = users;
             _shops = shops;
             _hasher = hasher;
+            _current = current;
+            _scope = scope;
             _uow = uow;
         }
 
         public async Task<UserDto> ExecuteAsync(CreateUserRequest request, CancellationToken ct = default)
         {
+            var actorRole = _current.Role
+                ?? throw new UnauthorizedException("No autenticado.");
+
+            // Sin esto, un Admin se fabrica un SuperAdmin y entra con él.
+            if (actorRole != Role.SuperAdmin && request.Role is Role.SuperAdmin or Role.Admin)
+                throw new ForbiddenException("Solo un SuperAdmin puede crear cuentas de administrador.");
+
             if (await _users.ExistsByEmailAsync(request.Email, ct))
                 throw new ConflictException("Ya existe una cuenta con ese correo.");
 
@@ -32,6 +50,8 @@ namespace BarberOS.Application.Users.UseCases
 
                 if (!shop.IsActive)
                     throw new BusinessRuleException("No se puede asociar un usuario a una barbería inactiva.");
+
+                await _scope.EnsureInScopeAsync(shop.Id, ct);
             }
 
             var hash = _hasher.Hash(request.Password);

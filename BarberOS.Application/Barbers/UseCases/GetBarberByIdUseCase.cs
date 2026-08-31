@@ -15,7 +15,7 @@ namespace BarberOS.Application.Barbers.UseCases
             _users = users;
         }
 
-        public async Task<BarberDto> ExecuteAsync(Guid id, CancellationToken ct = default)
+        public async Task<PublicBarberDto> ExecuteAsync(Guid id, CancellationToken ct = default)
         {
             var b = await _barbers.GetByIdAsync(id, ct)
                 ?? throw NotFoundException.For("barbero", id);
@@ -23,8 +23,8 @@ namespace BarberOS.Application.Barbers.UseCases
             var user = await _users.GetByIdAsync(b.UserId, ct)
                 ?? throw NotFoundException.For("usuario del barbero", b.UserId);
 
-            return new BarberDto(
-                b.Id, user.Id, user.FullName, user.Phone, b.BarbershopId,
+            return new PublicBarberDto(
+                b.Id, user.FullName, b.BarbershopId,
                 b.LunchStart, b.LunchEnd, b.GetAvailableDays(), b.IsActive
             );
         }

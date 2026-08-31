@@ -8,17 +8,21 @@ namespace BarberOS.Application.Metrics.UseCases
     {
         private readonly IMetricsRepository _metrics;
         private readonly IBarbershopRepository _shops;
+        private readonly TenantScope _scope;
 
-        public GetBarbershopMetricsUseCase(IMetricsRepository metrics, IBarbershopRepository shops)
+        public GetBarbershopMetricsUseCase(IMetricsRepository metrics, IBarbershopRepository shops, TenantScope scope)
         {
             _metrics = metrics;
             _shops = shops;
+            _scope = scope;
         }
 
         public async Task<BarbershopMetricsDto> ExecuteAsync(Guid barbershopId, MetricsQuery query, CancellationToken ct = default)
         {
             var shop = await _shops.GetByIdAsync(barbershopId, ct)
                 ?? throw NotFoundException.For("barbería", barbershopId);
+
+            await _scope.EnsureInScopeAsync(shop.Id, ct);
 
             var principalId = shop.IsMain ? shop.Id : shop.ParentId!.Value;
 

@@ -4,34 +4,44 @@ using BarberOS.Domain.Exceptions;
 
 namespace BarberOS.Application.Barbers.UseCases
 {
-    public class ListBarbersByBarbershopUseCase
+    /// <summary>
+    /// Listado de barberos para el panel: incluye el id de usuario y el telefono,
+    /// que el listado publico no expone. Acotado a la barberia del administrador.
+    /// </summary>
+    public class ListBarbersForAdminUseCase
     {
         private readonly IBarberRepository _barbers;
         private readonly IBarbershopRepository _shops;
         private readonly IUserRepository _users;
+        private readonly TenantScope _scope;
 
-        public ListBarbersByBarbershopUseCase(IBarberRepository barbers, IBarbershopRepository shops, IUserRepository users)
+        public ListBarbersForAdminUseCase(
+            IBarberRepository barbers,
+            IBarbershopRepository shops,
+            IUserRepository users,
+            TenantScope scope)
         {
             _barbers = barbers;
             _shops = shops;
             _users = users;
+            _scope = scope;
         }
 
-        public async Task<IReadOnlyList<PublicBarberDto>> ExecuteAsync(Guid barbershopId, CancellationToken ct = default)
+        public async Task<IReadOnlyList<BarberDto>> ExecuteAsync(Guid barbershopId, CancellationToken ct = default)
         {
             var shop = await _shops.GetByIdAsync(barbershopId, ct)
                 ?? throw NotFoundException.For("barbería", barbershopId);
 
-            // For a main barbershop, aggregate barbers from all its branches.
-            // Barbers belong to specific locations (branches), not to the parent.
-            var shopIds = new List<Guid> { barbershopId };
+            await _scope.EnsureInScopeAsync(shop.Id, ct);
+
+            var shopIds = new List<Guid> { shop.Id };
             if (shop.IsMain)
             {
-                var branches = await _shops.ListBranchesAsync(barbershopId, ct);
+                var branches = await _shops.ListBranchesAsync(shop.Id, ct);
                 shopIds.AddRange(branches.Select(b => b.Id));
             }
 
-            var allBarbers = new List<PublicBarberDto>();
+            var result = new List<BarberDto>();
             foreach (var sid in shopIds)
             {
                 var barbers = await _barbers.ListByBarbershopAsync(sid, includeInactive: false, ct);
@@ -40,13 +50,13 @@ namespace BarberOS.Application.Barbers.UseCases
                     var user = await _users.GetByIdAsync(b.UserId, ct);
                     if (user is null) continue;
 
-                    allBarbers.Add(new PublicBarberDto(
-                        b.Id, user.FullName, b.BarbershopId,
+                    result.Add(new BarberDto(
+                        b.Id, user.Id, user.FullName, user.Phone, b.BarbershopId,
                         b.LunchStart, b.LunchEnd, b.GetAvailableDays(), b.IsActive
                     ));
                 }
             }
-            return allBarbers;
+            return result;
         }
     }
 }

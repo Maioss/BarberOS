@@ -13,7 +13,17 @@ namespace BarberOS.Api.Controllers
     [Authorize]
     public class UsersController : ControllerBase
     {
+        [HttpGet("me")]
+        public async Task<ActionResult<ApiResponse<UserDto>>> GetMyProfile(
+            [FromServices] GetMyProfileUseCase useCase,
+            CancellationToken ct)
+        {
+            var result = await useCase.ExecuteAsync(ct);
+            return Ok(ApiResponse<UserDto>.Ok(result));
+        }
+
         [HttpGet("{id:guid}")]
+        [Authorize(Roles = "SuperAdmin,Admin")]
         public async Task<ActionResult<ApiResponse<UserDto>>> GetById(
             Guid id,
             [FromServices] GetUserByIdUseCase useCase,

@@ -29,7 +29,8 @@ namespace BarberOS.Api.Controllers
         {
             await validator.ValidateAndThrowAsync(request, ct);
             var userId = _currentUser.UserId!.Value;
-            var result = await useCase.ExecuteAsync(userId, request, ct);
+            var role = _currentUser.Role!.Value;
+            var result = await useCase.ExecuteAsync(userId, role, request, ct);
             return Created($"/api/appointments/{result.Id}", ApiResponse<AppointmentDto>.Ok(result, "Reserva creada."));
         }
 
