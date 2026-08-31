@@ -1,4 +1,5 @@
 using BarberOS.Application.Shared;
+using BarberOS.Domain.Entities;
 using BarberOS.Domain.Enums;
 using BarberOS.Domain.Exceptions;
 
@@ -8,15 +9,21 @@ namespace BarberOS.Application.Appointments.UseCases
     {
         private readonly IAppointmentRepository _appointments;
         private readonly IBarberRepository _barbers;
+        private readonly IBalanceEntryRepository _ledger;
+        private readonly TenantScope _scope;
         private readonly IUnitOfWork _uow;
 
         public CompleteAppointmentUseCase(
             IAppointmentRepository appointments,
             IBarberRepository barbers,
+            IBalanceEntryRepository ledger,
+            TenantScope scope,
             IUnitOfWork uow)
         {
             _appointments = appointments;
             _barbers = barbers;
+            _ledger = ledger;
+            _scope = scope;
             _uow = uow;
         }
 
@@ -33,15 +40,21 @@ namespace BarberOS.Application.Appointments.UseCases
                     throw new ForbiddenException("No tienes permiso para completar esta reserva.");
             }
 
+            // Completar acredita saldo: un admin de otra barberia no puede mover el
+            // dinero de un barbero que no es suyo.
+            if (requestingRole is Role.Admin or Role.SuperAdmin)
+                await _scope.EnsureInScopeAsync(appointment.BarbershopId, ct);
+
             appointment.Complete();
 
             var assignedBarber = await _barbers.GetByIdAsync(appointment.BarberId, ct)
                 ?? throw NotFoundException.For("barbero", appointment.BarberId);
 
-            assignedBarber.AddToBalance(appointment.TotalPrice);
+            var credit = BalanceEntry.ForCompletedAppointment(
+                assignedBarber.Id, appointment.Id, appointment.TotalPrice);
 
             _appointments.Update(appointment);
-            _barbers.Update(assignedBarber);
+            await _ledger.AddAsync(credit, ct);
             await _uow.SaveChangesAsync(ct);
         }
     }

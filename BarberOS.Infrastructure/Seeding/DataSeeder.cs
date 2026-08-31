@@ -74,6 +74,11 @@ namespace BarberOS.Infrastructure.Seeding
                     .OrderBy(b => b.CreatedAt)
                     .ToListAsync(ct);
 
+                // Con barberias en la base pero menos de tres sucursales, indexar a ciegas
+                // tumbaba el arranque de la aplicacion.
+                if (branches.Count < 3)
+                    return;
+
                 var barberUser1 = User.Create(
                     email: "barbero.pitch@barberos.com",
                     passwordHash: hasher.Hash("Pitch2026!"),
@@ -151,10 +156,15 @@ namespace BarberOS.Infrastructure.Seeding
                 var s3 = ServiceMapper.ToDomain(serviceDbs.Count > 2 ? serviceDbs[2] : serviceDbs[0]);
                 var s4 = ServiceMapper.ToDomain(serviceDbs.Count > 3 ? serviceDbs[3] : serviceDbs[0]);
 
-                // ── Hoy: citas confirmadas ──────────────────────────────────
-                var apt1 = Appointment.Create(client.Id, b1.Id, b1.BarbershopId, today, new TimeOnly(9, 0), new List<Service> { s1 }.AsReadOnly());
-                var apt2 = Appointment.Create(client.Id, b1.Id, b1.BarbershopId, today, new TimeOnly(10, 0), new List<Service> { s2 }.AsReadOnly());
-                var apt3 = Appointment.Create(client.Id, b2.Id, b2.BarbershopId, today, new TimeOnly(11, 0), new List<Service> { s1, s2 }.AsReadOnly());
+                // ── Proxima jornada laboral: citas confirmadas ──────────────
+                // Sembrar siempre "hoy" ponia citas en domingo, cuando ningun barbero
+                // trabaja, y la agenda quedaba mostrando algo imposible.
+                var day1 = NextWorkingDay(BarberMapper.ToDomain(b1), today);
+                var day2 = NextWorkingDay(BarberMapper.ToDomain(b2), today);
+
+                var apt1 = Appointment.Create(client.Id, b1.Id, b1.BarbershopId, day1, new TimeOnly(9, 0), new List<Service> { s1 }.AsReadOnly());
+                var apt2 = Appointment.Create(client.Id, b1.Id, b1.BarbershopId, day1, new TimeOnly(10, 0), new List<Service> { s2 }.AsReadOnly());
+                var apt3 = Appointment.Create(client.Id, b2.Id, b2.BarbershopId, day2, new TimeOnly(11, 0), new List<Service> { s1, s2 }.AsReadOnly());
 
                 await db.Appointments.AddAsync(AppointmentMapper.ToDbModel(apt1), ct);
                 await db.Appointments.AddAsync(AppointmentMapper.ToDbModel(apt2), ct);
@@ -180,6 +190,11 @@ namespace BarberOS.Infrastructure.Seeding
                     var hist = Appointment.Create(client.Id, b1.Id, b1.BarbershopId, today.AddDays(daysAgo), time, new List<Service> { svc }.AsReadOnly());
                     hist.Complete();
                     await db.Appointments.AddAsync(AppointmentMapper.ToDbModel(hist), ct);
+
+                    // Completar acredita al barbero: sin esto las metricas mostraban
+                    // facturacion y el saldo del barbero quedaba en cero.
+                    var credit = BalanceEntry.ForCompletedAppointment(b1.Id, hist.Id, hist.TotalPrice);
+                    await db.BalanceEntries.AddAsync(BalanceEntryMapper.ToDbModel(credit), ct);
                 }
 
                 // ── Canceladas: para variedad en métricas ──────────────────
@@ -193,6 +208,18 @@ namespace BarberOS.Infrastructure.Seeding
 
                 await db.SaveChangesAsync(ct);
             }
+        }
+
+        /// <summary>Primer dia, desde <paramref name="from"/>, en que el barbero trabaja.</summary>
+        private static DateOnly NextWorkingDay(Barber barber, DateOnly from)
+        {
+            for (var i = 0; i < 7; i++)
+            {
+                var candidate = from.AddDays(i);
+                if (barber.IsAvailableOn(candidate.DayOfWeek))
+                    return candidate;
+            }
+            return from;
         }
     }
 }

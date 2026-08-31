@@ -1,4 +1,5 @@
 using BarberOS.Application.Shared;
+using BarberOS.Domain.Entities;
 using BarberOS.Domain.Exceptions;
 
 namespace BarberOS.Application.Payments.UseCases
@@ -7,17 +8,20 @@ namespace BarberOS.Application.Payments.UseCases
     {
         private readonly IPaymentRepository _payments;
         private readonly IBarberRepository _barbers;
+        private readonly IBalanceEntryRepository _ledger;
         private readonly TenantScope _scope;
         private readonly IUnitOfWork _uow;
 
         public RefundPaymentUseCase(
             IPaymentRepository payments,
             IBarberRepository barbers,
+            IBalanceEntryRepository ledger,
             TenantScope scope,
             IUnitOfWork uow)
         {
             _payments = payments;
             _barbers = barbers;
+            _ledger = ledger;
             _scope = scope;
             _uow = uow;
         }
@@ -33,10 +37,12 @@ namespace BarberOS.Application.Payments.UseCases
                 ?? throw NotFoundException.For("barbero", payment.BarberId);
 
             payment.Refund();
-            barber.DeductFromBalance(payment.Amount);
+
+            var debit = BalanceEntry.ForRefundedPayment(
+                barber.Id, payment.Id, payment.AppointmentId, payment.Amount);
 
             _payments.Update(payment);
-            _barbers.Update(barber);
+            await _ledger.AddAsync(debit, ct);
             await _uow.SaveChangesAsync(ct);
         }
     }

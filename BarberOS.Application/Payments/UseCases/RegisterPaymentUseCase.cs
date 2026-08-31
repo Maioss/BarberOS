@@ -34,14 +34,12 @@ namespace BarberOS.Application.Payments.UseCases
             if (existing is not null && existing.Status == PaymentStatus.Paid)
                 throw new ConflictException("Esta reserva ya tiene un pago registrado.");
 
-            var amount = request.Amount ?? appointment.TotalPrice;
-
             var payment = Payment.Create(
                 appointment.Id,
                 appointment.ClientId,
                 appointment.BarberId,
                 appointment.BarbershopId,
-                amount,
+                appointment.TotalPrice,
                 request.Method,
                 request.Notes);
 

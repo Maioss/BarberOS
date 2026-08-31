@@ -21,10 +21,6 @@ namespace BarberOS.Infrastructure.Persistence.Configurations
             builder.Property(x => x.LunchEnd).IsRequired();
             builder.Property(x => x.AvailableDays).IsRequired();
 
-            builder.Property(x => x.Balance)
-                .IsRequired()
-                .HasColumnType("numeric(12,2)");
-
             builder.Property(x => x.IsActive).IsRequired();
             builder.Property(x => x.CreatedAt).IsRequired();
             builder.Property(x => x.UpdatedAt).IsRequired();

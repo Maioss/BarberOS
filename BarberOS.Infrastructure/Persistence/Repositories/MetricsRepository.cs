@@ -172,6 +172,10 @@ namespace BarberOS.Infrastructure.Persistence.Repositories
                             && a.Status == completedStatus)
                 .SumAsync(a => (decimal?)a.TotalPrice, ct) ?? 0m;
 
+            var currentBalance = await _db.BalanceEntries.AsNoTracking()
+                .Where(e => e.BarberId == barberId)
+                .SumAsync(e => (decimal?)e.Amount, ct) ?? 0m;
+
             // TopServices: fetch rows, group in memory
             var completedApptIds = await _db.Appointments.AsNoTracking()
                 .Where(a => a.BarberId == barberId && a.Date >= dateFrom && a.Date <= dateTo
@@ -204,7 +208,7 @@ namespace BarberOS.Infrastructure.Persistence.Repositories
                 cancelledAppointments,
                 completionRate,
                 grossRevenue,
-                barber.Balance,
+                currentBalance,
                 topServices);
         }
     }

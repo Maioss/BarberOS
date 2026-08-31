@@ -8,12 +8,18 @@ namespace BarberOS.Application.Appointments.UseCases
     {
         private readonly IAppointmentRepository _appointments;
         private readonly IBarberRepository _barbers;
+        private readonly TenantScope _scope;
         private readonly IUnitOfWork _uow;
 
-        public CancelAppointmentUseCase(IAppointmentRepository appointments, IBarberRepository barbers, IUnitOfWork uow)
+        public CancelAppointmentUseCase(
+            IAppointmentRepository appointments,
+            IBarberRepository barbers,
+            TenantScope scope,
+            IUnitOfWork uow)
         {
             _appointments = appointments;
             _barbers = barbers;
+            _scope = scope;
             _uow = uow;
         }
 
@@ -32,6 +38,9 @@ namespace BarberOS.Application.Appointments.UseCases
                 if (appointment.BarberId != barber.Id)
                     throw new ForbiddenException("No tienes permiso para cancelar esta reserva.");
             }
+
+            if (requestingRole is Role.Admin or Role.SuperAdmin)
+                await _scope.EnsureInScopeAsync(appointment.BarbershopId, ct);
 
             appointment.Cancel();
             _appointments.Update(appointment);

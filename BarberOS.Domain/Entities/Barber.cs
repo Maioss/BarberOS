@@ -10,7 +10,6 @@ namespace BarberOS.Domain.Entities
         public TimeOnly LunchStart { get; private set; }
         public TimeOnly LunchEnd { get; private set; }
         public int AvailableDays { get; private set; }
-        public decimal Balance { get; private set; }
         public bool IsActive { get; private set; }
         public DateTime CreatedAt { get; private set; }
         public DateTime UpdatedAt { get; private set; }
@@ -28,7 +27,6 @@ namespace BarberOS.Domain.Entities
                 LunchStart = new TimeOnly(12, 0),
                 LunchEnd = new TimeOnly(13, 0),
                 AvailableDays = 0b1111110,
-                Balance = 0m,
                 IsActive = true,
                 CreatedAt = now,
                 UpdatedAt = now
@@ -64,23 +62,8 @@ namespace BarberOS.Domain.Entities
             return result;
         }
 
-        public void AddToBalance(decimal amount)
-        {
-            if (amount <= 0)
-                throw new BusinessRuleException("El monto a sumar al saldo debe ser positivo.");
-
-            Balance += amount;
-            UpdatedAt = DateTime.UtcNow;
-        }
-
-        public void DeductFromBalance(decimal amount)
-        {
-            if (amount <= 0)
-                throw new BusinessRuleException("El monto a deducir del saldo debe ser positivo.");
-
-            Balance -= amount;
-            UpdatedAt = DateTime.UtcNow;
-        }
+        // El saldo vive en BalanceEntry, no aqui: era un campo mutable que dos casos de
+        // uso sumaban y restaban sin piso ni rastro, y acababa descuadrado.
 
         public void Deactivate()
         {

@@ -14,7 +14,6 @@ namespace BarberOS.Infrastructure.Persistence.Mappers
             LunchStart = b.LunchStart,
             LunchEnd = b.LunchEnd,
             AvailableDays = b.AvailableDays,
-            Balance = b.Balance,
             IsActive = b.IsActive,
             CreatedAt = b.CreatedAt,
             UpdatedAt = b.UpdatedAt
@@ -30,7 +29,6 @@ namespace BarberOS.Infrastructure.Persistence.Mappers
             SetPrivate(entity, t, nameof(Barber.LunchStart), db.LunchStart);
             SetPrivate(entity, t, nameof(Barber.LunchEnd), db.LunchEnd);
             SetPrivate(entity, t, nameof(Barber.AvailableDays), db.AvailableDays);
-            SetPrivate(entity, t, nameof(Barber.Balance), db.Balance);
             SetPrivate(entity, t, nameof(Barber.IsActive), db.IsActive);
             SetPrivate(entity, t, nameof(Barber.CreatedAt), db.CreatedAt);
             SetPrivate(entity, t, nameof(Barber.UpdatedAt), db.UpdatedAt);

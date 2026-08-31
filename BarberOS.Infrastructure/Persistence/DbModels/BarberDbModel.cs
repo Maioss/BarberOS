@@ -8,7 +8,6 @@ namespace BarberOS.Infrastructure.Persistence.DbModels
         public TimeOnly LunchStart { get; set; }
         public TimeOnly LunchEnd { get; set; }
         public int AvailableDays { get; set; }
-        public decimal Balance { get; set; }
         public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
