@@ -37,6 +37,12 @@ namespace BarberOS.Infrastructure
             var jwt = configuration.GetSection("Jwt").Get<JwtSettings>()
                 ?? throw new InvalidOperationException("Falta la sección 'Jwt' en configuración.");
 
+            if (string.IsNullOrWhiteSpace(jwt.Secret) || Encoding.UTF8.GetByteCount(jwt.Secret) < 32)
+                throw new InvalidOperationException(
+                    "Falta 'Jwt:Secret' o es mas corto que 32 bytes. " +
+                    "En desarrollo: dotnet user-secrets set \"Jwt:Secret\" \"<valor>\" --project BarberOS.Api. " +
+                    "En produccion: variable de entorno Jwt__Secret.");
+
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
                 {
