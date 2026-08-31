@@ -18,8 +18,6 @@ namespace BarberOS.Infrastructure.Persistence.Configurations
 
             builder.HasIndex(x => x.BarberId);
 
-            // Acreditar una cita o descontar un reembolso dos veces deja de ser posible:
-            // el segundo intento choca con el indice.
             builder.HasIndex(x => new { x.AppointmentId, x.Reason })
                 .IsUnique()
                 .HasFilter("\"AppointmentId\" IS NOT NULL");

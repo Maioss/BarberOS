@@ -40,6 +40,7 @@ namespace BarberOS.Application
             services.AddScoped<DeleteUserUseCase>();
 
             services.AddScoped<CreateBarberUseCase>();
+            services.AddScoped<OnboardBarberUseCase>();
             services.AddScoped<GetBarberByIdUseCase>();
             services.AddScoped<ListBarbersByBarbershopUseCase>();
             services.AddScoped<ListBarbersForAdminUseCase>();

@@ -9,10 +9,7 @@ namespace BarberOS.Infrastructure.Persistence
 
     public class BarberOSDbContext : DbContext, IUnitOfWork
     {
-        /// <summary>exclusion_violation: dos citas del mismo barbero se solapan.</summary>
         private const string ExclusionViolation = "23P01";
-
-        /// <summary>unique_violation.</summary>
         private const string UniqueViolation = "23505";
 
         public BarberOSDbContext(DbContextOptions<BarberOSDbContext> options) : base(options) { }
@@ -32,10 +29,8 @@ namespace BarberOS.Infrastructure.Persistence
         }
 
         /// <summary>
-        /// Las reglas que impone la base — el solapamiento de citas y los movimientos de
-        /// saldo repetidos — llegan aqui como excepciones de Npgsql. Se traducen a
-        /// excepciones de dominio para que la capa de aplicacion no sepa de Postgres y
-        /// el cliente reciba un 409 en vez de un 500.
+        /// Traduce las restricciones que impone Postgres a excepciones de dominio, para
+        /// que Application no sepa de Npgsql y el cliente reciba un 409 en vez de un 500.
         /// </summary>
         public override async Task<int> SaveChangesAsync(CancellationToken ct = default)
         {

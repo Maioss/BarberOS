@@ -38,7 +38,6 @@ namespace BarberOS.Application.Barbers.UseCases
             if (!isOwner && !isAdmin)
                 throw new ForbiddenException("No tienes permiso para modificar este horario.");
 
-            // Un Admin solo manda sobre los barberos de su propia barberia.
             if (!isOwner)
                 await _scope.EnsureInScopeAsync(barber.BarbershopId, ct);
 

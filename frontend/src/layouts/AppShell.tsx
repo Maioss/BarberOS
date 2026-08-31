@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
+import { resolvePhotoUrl } from '../lib/photoUrl'
 import { Logo } from '../components/ui/Logo'
 import { Button } from '../components/ui/Button'
 
@@ -41,7 +42,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               </div>
               {user?.photoUrl ? (
                 <img
-                  src={user.photoUrl}
+                  src={resolvePhotoUrl(user.photoUrl) ?? undefined}
                   alt="Foto de perfil"
                   className="w-9 h-9 rounded-full object-cover border-2 border-transparent group-hover:border-accent transition-colors"
                 />

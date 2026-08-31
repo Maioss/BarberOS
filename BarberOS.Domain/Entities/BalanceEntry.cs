@@ -4,9 +4,8 @@ using BarberOS.Domain.Exceptions;
 namespace BarberOS.Domain.Entities
 {
     /// <summary>
-    /// Movimiento del saldo de un barbero. El saldo no se guarda como un numero que
-    /// se suma y se resta: es la suma de estos asientos, que son inmutables. Asi no
-    /// puede descuadrarse y queda el rastro de por que cambio.
+    /// Movimiento del saldo de un barbero. El saldo es la suma de estos asientos, que
+    /// son inmutables: asi no puede descuadrarse y queda el rastro de por que cambio.
     /// </summary>
     public class BalanceEntry
     {
@@ -48,7 +47,6 @@ namespace BarberOS.Domain.Entities
             };
         }
 
-        /// <summary>Acredita al barbero lo que valio la cita que atendio.</summary>
         public static BalanceEntry ForCompletedAppointment(Guid barberId, Guid appointmentId, decimal amount)
         {
             if (amount <= 0m)
@@ -57,7 +55,6 @@ namespace BarberOS.Domain.Entities
             return Create(barberId, amount, BalanceEntryReason.AppointmentCompleted, appointmentId, null);
         }
 
-        /// <summary>Descuenta un reembolso. Se guarda en negativo.</summary>
         public static BalanceEntry ForRefundedPayment(Guid barberId, Guid paymentId, Guid appointmentId, decimal amount)
         {
             if (amount <= 0m)
@@ -66,7 +63,6 @@ namespace BarberOS.Domain.Entities
             return Create(barberId, -amount, BalanceEntryReason.PaymentRefunded, appointmentId, paymentId);
         }
 
-        /// <summary>Ajuste manual, para cuadrar a mano lo que ningun flujo cubre.</summary>
         public static BalanceEntry ForAdjustment(Guid barberId, decimal amount) =>
             Create(barberId, amount, BalanceEntryReason.Adjustment, null, null);
     }

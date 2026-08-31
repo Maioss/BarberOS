@@ -3,6 +3,7 @@ using BarberOS.Api.Middleware;
 using BarberOS.Api.Services;
 using BarberOS.Application;
 using BarberOS.Application.Shared;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.FileProviders;
 using BarberOS.Infrastructure;
@@ -23,6 +24,7 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddScoped<ProfilePhotoStorage>();
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
@@ -67,7 +69,18 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader());
 });
 
+// Sin esto, tras un proxy la app cree que la peticion llego por HTTP y
+// UseHttpsRedirection la reenvia en bucle.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 var app = builder.Build();
+
+app.UseForwardedHeaders();
 
 app.UseMiddleware<ExceptionMiddleware>();
 

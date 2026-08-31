@@ -15,6 +15,7 @@ namespace BarberOS.Infrastructure.Persistence.Mappers
                 Address = b.Address,
                 City = b.City,
                 Phone = b.Phone,
+                TimeZoneId = b.TimeZoneId,
                 IsMain = b.IsMain,
                 ParentId = b.ParentId,
                 IsActive = b.IsActive,
@@ -31,6 +32,7 @@ namespace BarberOS.Infrastructure.Persistence.Mappers
             Set(b, nameof(Barbershop.Address), row.Address);
             Set(b, nameof(Barbershop.City), row.City);
             Set(b, nameof(Barbershop.Phone), row.Phone);
+            Set(b, nameof(Barbershop.TimeZoneId), row.TimeZoneId);
             Set(b, nameof(Barbershop.IsMain), row.IsMain);
             Set(b, nameof(Barbershop.ParentId), row.ParentId);
             Set(b, nameof(Barbershop.IsActive), row.IsActive);

@@ -22,8 +22,9 @@ public class UpdateMyPhotoUseCase
         if (!_current.IsAuthenticated || _current.UserId is null)
             throw new UnauthorizedException("No autenticado.");
 
-        if (request.PhotoUrl is not null && request.PhotoUrl.Length > 2048)
-            throw new BusinessRuleException("La URL de la foto es demasiado larga.");
+        // Solo una ruta que haya producido la subida, o null para quitarla.
+        if (request.PhotoUrl is not null && !IsStoredPhotoPath(request.PhotoUrl))
+            throw new BusinessRuleException("La foto debe ser una imagen subida a la aplicación.");
 
         var user = await _users.GetByIdAsync(_current.UserId.Value, ct)
             ?? throw new NotFoundException("Usuario no encontrado.");
@@ -34,4 +35,10 @@ public class UpdateMyPhotoUseCase
 
         return new UserDto(user.Id, user.Email, user.FullName, user.Phone, user.PhotoUrl, user.Role, user.BarbershopId, user.IsActive, user.CreatedAt);
     }
+
+    private static bool IsStoredPhotoPath(string value) =>
+        value.Length <= 256
+        && value.StartsWith("/photos/", StringComparison.Ordinal)
+        && !value.Contains("..", StringComparison.Ordinal)
+        && value.AsSpan(8).IndexOfAny('/', '\\') < 0;
 }

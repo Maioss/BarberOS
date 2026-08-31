@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { uploadAvatar, AvatarValidationError } from '../lib/uploadAvatar'
+import { resolvePhotoUrl } from '../lib/photoUrl'
 
 interface Props {
   userId: string
@@ -41,7 +42,7 @@ export function AvatarUploader({ userId, currentUrl, initials, onUploadSuccess }
     if (file) void handleFile(file)
   }
 
-  const displayUrl = preview ?? currentUrl
+  const displayUrl = preview ?? resolvePhotoUrl(currentUrl)
 
   return (
     <div className="flex flex-col items-center gap-3">

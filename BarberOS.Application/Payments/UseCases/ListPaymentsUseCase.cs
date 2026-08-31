@@ -16,7 +16,6 @@ namespace BarberOS.Application.Payments.UseCases
 
         public async Task<PagedResult<PaymentDto>> ExecuteAsync(PaymentFilter filter, CancellationToken ct = default)
         {
-            // null = SuperAdmin, sin restriccion de sede.
             var allowed = await _scope.VisibleSiteIdsAsync(ct);
             var sites = allowed;
 

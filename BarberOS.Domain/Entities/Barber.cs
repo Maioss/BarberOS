@@ -62,9 +62,6 @@ namespace BarberOS.Domain.Entities
             return result;
         }
 
-        // El saldo vive en BalanceEntry, no aqui: era un campo mutable que dos casos de
-        // uso sumaban y restaban sin piso ni rastro, y acababa descuadrado.
-
         public void Deactivate()
         {
             IsActive = false;

@@ -3,6 +3,7 @@ using BarberOS.Application.Shared;
 using BarberOS.Infrastructure.Persistence;
 using BarberOS.Infrastructure.Persistence.Repositories;
 using BarberOS.Infrastructure.Security;
+using BarberOS.Infrastructure.Time;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -31,6 +32,7 @@ namespace BarberOS.Infrastructure
             services.AddScoped<IBalanceEntryRepository, BalanceEntryRepository>();
             services.AddScoped<IMetricsRepository, MetricsRepository>();
             services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
+            services.AddSingleton<IBusinessClock, BusinessClock>();
 
             services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
             services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();

@@ -35,8 +35,6 @@ namespace BarberOS.Application.Users.UseCases
         {
             var actorRole = _current.Role
                 ?? throw new UnauthorizedException("No autenticado.");
-
-            // Sin esto, un Admin se fabrica un SuperAdmin y entra con él.
             if (actorRole != Role.SuperAdmin && request.Role is Role.SuperAdmin or Role.Admin)
                 throw new ForbiddenException("Solo un SuperAdmin puede crear cuentas de administrador.");
 

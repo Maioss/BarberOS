@@ -9,12 +9,21 @@ namespace BarberOS.Application.Metrics.UseCases
     {
         private readonly IMetricsRepository _metrics;
         private readonly IBarberRepository _barbers;
+        private readonly IBarbershopRepository _shops;
+        private readonly IBusinessClock _clock;
         private readonly ICurrentUserService _current;
 
-        public GetMyBarberMetricsUseCase(IMetricsRepository metrics, IBarberRepository barbers, ICurrentUserService current)
+        public GetMyBarberMetricsUseCase(
+            IMetricsRepository metrics,
+            IBarberRepository barbers,
+            IBarbershopRepository shops,
+            IBusinessClock clock,
+            ICurrentUserService current)
         {
             _metrics = metrics;
             _barbers = barbers;
+            _shops = shops;
+            _clock = clock;
             _current = current;
         }
 
@@ -29,15 +38,17 @@ namespace BarberOS.Application.Metrics.UseCases
             var barber = await _barbers.GetByUserIdAsync(_current.UserId.Value, ct)
                 ?? throw new NotFoundException("No tienes un perfil de barbero registrado.");
 
-            var (from, to) = ResolvePeriod(query);
+            var shop = await _shops.GetByIdAsync(barber.BarbershopId, ct)
+                ?? throw NotFoundException.For("barbería", barber.BarbershopId);
+
+            var (from, to) = ResolvePeriod(query, _clock.Today(shop));
 
             return await _metrics.GetBarberMetricsAsync(barber.Id, from, to, ct)
                 ?? throw NotFoundException.For("barbero", barber.Id);
         }
 
-        private static (DateOnly From, DateOnly To) ResolvePeriod(MetricsQuery query)
+        private static (DateOnly From, DateOnly To) ResolvePeriod(MetricsQuery query, DateOnly today)
         {
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
             var to = query.To ?? today;
             var from = query.From ?? to.AddDays(-30);

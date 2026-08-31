@@ -2,8 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import type { AdminBarberDto, UpdateScheduleRequest } from '../../api/admin'
 import {
   getBarbersByBarbershop,
-  createUserAsBarber,
-  createBarberProfile,
+  onboardBarber,
   updateBarberSchedule,
   updateUserBasicInfo,
 } from '../../api/admin'
@@ -87,33 +86,19 @@ export function AdminBarbersTab({ barbershopId }: Props) {
   const handleAddBarber = async () => {
     setAddError(null)
     setAddingStep(1)
-    let createdUserId: string
     try {
-      const user = await createUserAsBarber({
+      const barber = await onboardBarber({
         email: newForm.email,
         password: newForm.password,
         fullName: newForm.fullName,
         phone: newForm.phone.trim() !== '' ? newForm.phone : null,
-        role: 'Barber',
         barbershopId,
       })
-      createdUserId = user.id
-    } catch (err) {
-      setAddError(err instanceof Error ? err.message : 'Error al crear el usuario')
-      setAddingStep(null)
-      return
-    }
-    setAddingStep(2)
-    try {
-      const barber = await createBarberProfile(createdUserId)
       setBarbers(prev => [...prev, barber])
       setNewForm(EMPTY_FORM)
       setShowAddForm(false)
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Error desconocido'
-      setAddError(
-        `El usuario ${newForm.email} fue creado con rol Barber, pero no se pudo registrar el perfil de barbero: ${msg}. Contactá soporte para completar el alta.`,
-      )
+      setAddError(err instanceof Error ? err.message : 'Error al dar de alta al barbero')
     } finally {
       setAddingStep(null)
     }

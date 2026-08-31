@@ -62,8 +62,6 @@ interface PagedResult<T> {
   totalPages: number
 }
 
-// El listado publico de /api/barbershops/{id}/barbers ya no trae userId ni telefono:
-// el panel necesita ambos, asi que usa el endpoint de administracion.
 export async function getBarbersByBarbershop(barbershopId: string): Promise<AdminBarberDto[]> {
   return apiGet<AdminBarberDto[]>(`/api/barbers?barbershopId=${barbershopId}`)
 }
@@ -74,6 +72,19 @@ export async function createUserAsBarber(request: CreateUserRequest): Promise<{ 
 
 export async function createBarberProfile(userId: string): Promise<AdminBarberDto> {
   return apiPost<{ userId: string }, AdminBarberDto>('/api/barbers', { userId })
+}
+
+export interface OnboardBarberRequest {
+  email: string
+  password: string
+  fullName: string
+  phone: string | null
+  barbershopId: string
+}
+
+/** Crea la cuenta y el perfil de barbero en una sola operacion. */
+export async function onboardBarber(request: OnboardBarberRequest): Promise<AdminBarberDto> {
+  return apiPost<OnboardBarberRequest, AdminBarberDto>('/api/barbers/onboard', request)
 }
 
 export async function updateBarberSchedule(

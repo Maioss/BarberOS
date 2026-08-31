@@ -4,10 +4,6 @@ using BarberOS.Domain.Exceptions;
 
 namespace BarberOS.Application.Users.UseCases
 {
-    /// <summary>
-    /// Perfil del usuario autenticado. Existe para que el frontend no tenga que pedir
-    /// su propio perfil al endpoint generico de usuarios, que es de administracion.
-    /// </summary>
     public class GetMyProfileUseCase
     {
         private readonly IUserRepository _users;

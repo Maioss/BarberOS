@@ -9,20 +9,26 @@ namespace BarberOS.Application.Appointments.UseCases
     {
         private readonly IAppointmentRepository _appointments;
         private readonly IBarberRepository _barbers;
+        private readonly IBarbershopRepository _shops;
         private readonly IBalanceEntryRepository _ledger;
+        private readonly IBusinessClock _clock;
         private readonly TenantScope _scope;
         private readonly IUnitOfWork _uow;
 
         public CompleteAppointmentUseCase(
             IAppointmentRepository appointments,
             IBarberRepository barbers,
+            IBarbershopRepository shops,
             IBalanceEntryRepository ledger,
+            IBusinessClock clock,
             TenantScope scope,
             IUnitOfWork uow)
         {
             _appointments = appointments;
             _barbers = barbers;
+            _shops = shops;
             _ledger = ledger;
+            _clock = clock;
             _scope = scope;
             _uow = uow;
         }
@@ -40,12 +46,13 @@ namespace BarberOS.Application.Appointments.UseCases
                     throw new ForbiddenException("No tienes permiso para completar esta reserva.");
             }
 
-            // Completar acredita saldo: un admin de otra barberia no puede mover el
-            // dinero de un barbero que no es suyo.
             if (requestingRole is Role.Admin or Role.SuperAdmin)
                 await _scope.EnsureInScopeAsync(appointment.BarbershopId, ct);
 
-            appointment.Complete();
+            var shop = await _shops.GetByIdAsync(appointment.BarbershopId, ct)
+                ?? throw NotFoundException.For("barbería", appointment.BarbershopId);
+
+            appointment.Complete(_clock.Today(shop));
 
             var assignedBarber = await _barbers.GetByIdAsync(appointment.BarberId, ct)
                 ?? throw NotFoundException.For("barbero", appointment.BarberId);

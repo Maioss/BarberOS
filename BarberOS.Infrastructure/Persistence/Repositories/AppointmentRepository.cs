@@ -63,7 +63,8 @@ namespace BarberOS.Infrastructure.Persistence.Repositories
 
             var total = await query.CountAsync(ct);
             var page = filter.Page < 1 ? 1 : filter.Page;
-            var pageSize = filter.PageSize < 1 ? 10 : filter.PageSize;
+            // Take viene acotado a [1, 100]; PageSize crudo dejaba pasar pageSize=100000.
+            var pageSize = filter.Take;
 
             var items = await query
                 .OrderByDescending(a => a.Date)

@@ -68,6 +68,19 @@ namespace BarberOS.Api.Controllers
             return CreatedAtAction(nameof(GetById), new { id = result.Id }, ApiResponse<BarberDto>.Ok(result, "Perfil de barbero creado."));
         }
 
+        [HttpPost("onboard")]
+        [Authorize(Roles = "SuperAdmin,Admin")]
+        public async Task<ActionResult<ApiResponse<BarberDto>>> Onboard(
+            [FromBody] OnboardBarberRequest request,
+            [FromServices] IValidator<OnboardBarberRequest> validator,
+            [FromServices] OnboardBarberUseCase useCase,
+            CancellationToken ct)
+        {
+            await validator.ValidateAndThrowAsync(request, ct);
+            var result = await useCase.ExecuteAsync(request, ct);
+            return CreatedAtAction(nameof(GetById), new { id = result.Id }, ApiResponse<BarberDto>.Ok(result, "Barbero dado de alta."));
+        }
+
         [HttpPut("{id:guid}/schedule")]
         [Authorize]
         public async Task<ActionResult<ApiResponse<BarberDto>>> UpdateSchedule(

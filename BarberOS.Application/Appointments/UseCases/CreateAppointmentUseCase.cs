@@ -13,6 +13,7 @@ namespace BarberOS.Application.Appointments.UseCases
         private readonly IBarbershopRepository _barbershops;
         private readonly IServiceRepository _services;
         private readonly IUserRepository _users;
+        private readonly IBusinessClock _clock;
         private readonly IUnitOfWork _uow;
 
         public CreateAppointmentUseCase(
@@ -21,6 +22,7 @@ namespace BarberOS.Application.Appointments.UseCases
             IBarbershopRepository barbershops,
             IServiceRepository services,
             IUserRepository users,
+            IBusinessClock clock,
             IUnitOfWork uow)
         {
             _appointments = appointments;
@@ -28,6 +30,7 @@ namespace BarberOS.Application.Appointments.UseCases
             _barbershops = barbershops;
             _services = services;
             _users = users;
+            _clock = clock;
             _uow = uow;
         }
 
@@ -37,10 +40,6 @@ namespace BarberOS.Application.Appointments.UseCases
             CreateAppointmentRequest request,
             CancellationToken ct = default)
         {
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
-            if (request.Date < today)
-                throw new BusinessRuleException("No se pueden crear reservas en fechas pasadas.");
-
             var barber = await _barbers.GetByIdAsync(request.BarberId, ct)
                 ?? throw NotFoundException.For("barbero", request.BarberId);
 
@@ -55,6 +54,13 @@ namespace BarberOS.Application.Appointments.UseCases
 
             if (!barbershop.IsActive)
                 throw new BusinessRuleException("La barbería no está activa.");
+
+            var today = _clock.Today(barbershop);
+            if (request.Date < today)
+                throw new BusinessRuleException("No se pueden crear reservas en fechas pasadas.");
+
+            if (request.Date == today && request.StartTime <= _clock.TimeNow(barbershop))
+                throw new BusinessRuleException("Ese horario ya pasó.");
 
             var serviceList = await _services.GetManyByIdsAsync(request.ServiceIds, ct);
             if (serviceList.Count != request.ServiceIds.Distinct().Count())
@@ -92,9 +98,6 @@ namespace BarberOS.Application.Appointments.UseCases
                 throw new BusinessRuleException("El barbero ya tiene una reserva confirmada en ese horario.");
 
             var clientId = requestingUserId;
-
-            // Reservar a nombre de otro solo tiene sentido para el mostrador; un cliente
-            // que manda ClientId estaria llenandole la agenda a un tercero.
             if (request.ClientId is not null && request.ClientId.Value != requestingUserId)
             {
                 if (requestingRole is not (Role.Admin or Role.SuperAdmin))

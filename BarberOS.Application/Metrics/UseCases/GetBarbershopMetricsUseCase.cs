@@ -8,12 +8,18 @@ namespace BarberOS.Application.Metrics.UseCases
     {
         private readonly IMetricsRepository _metrics;
         private readonly IBarbershopRepository _shops;
+        private readonly IBusinessClock _clock;
         private readonly TenantScope _scope;
 
-        public GetBarbershopMetricsUseCase(IMetricsRepository metrics, IBarbershopRepository shops, TenantScope scope)
+        public GetBarbershopMetricsUseCase(
+            IMetricsRepository metrics,
+            IBarbershopRepository shops,
+            IBusinessClock clock,
+            TenantScope scope)
         {
             _metrics = metrics;
             _shops = shops;
+            _clock = clock;
             _scope = scope;
         }
 
@@ -26,15 +32,14 @@ namespace BarberOS.Application.Metrics.UseCases
 
             var principalId = shop.IsMain ? shop.Id : shop.ParentId!.Value;
 
-            var (from, to) = ResolvePeriod(query);
+            var (from, to) = ResolvePeriod(query, _clock.Today(shop));
 
             return await _metrics.GetBarbershopMetricsAsync(principalId, from, to, ct)
                 ?? throw NotFoundException.For("barbería principal", principalId);
         }
 
-        private static (DateOnly From, DateOnly To) ResolvePeriod(MetricsQuery query)
+        private static (DateOnly From, DateOnly To) ResolvePeriod(MetricsQuery query, DateOnly today)
         {
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
             var to = query.To ?? today;
             var from = query.From ?? to.AddDays(-30);

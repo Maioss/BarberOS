@@ -49,21 +49,24 @@ namespace BarberOS.Infrastructure.Persistence.Repositories
             if (filter.Status.HasValue)
                 query = query.Where(p => p.Status == (int)filter.Status.Value);
 
+            // Npgsql rechaza un DateTime sin Kind contra timestamptz.
             if (filter.DateFrom.HasValue)
             {
-                var from = filter.DateFrom.Value.ToDateTime(TimeOnly.MinValue);
+                var from = DateTime.SpecifyKind(
+                    filter.DateFrom.Value.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc);
                 query = query.Where(p => p.CreatedAt >= from);
             }
 
             if (filter.DateTo.HasValue)
             {
-                var to = filter.DateTo.Value.ToDateTime(TimeOnly.MaxValue);
+                var to = DateTime.SpecifyKind(
+                    filter.DateTo.Value.ToDateTime(TimeOnly.MaxValue), DateTimeKind.Utc);
                 query = query.Where(p => p.CreatedAt <= to);
             }
 
             var total = await query.CountAsync(ct);
             var page = filter.Page < 1 ? 1 : filter.Page;
-            var pageSize = filter.PageSize < 1 ? 10 : filter.PageSize;
+            var pageSize = filter.Take;
 
             var items = await query
                 .OrderByDescending(p => p.CreatedAt)

@@ -4,10 +4,6 @@ using BarberOS.Domain.Exceptions;
 
 namespace BarberOS.Application.Barbers.UseCases
 {
-    /// <summary>
-    /// Listado de barberos para el panel: incluye el id de usuario y el telefono,
-    /// que el listado publico no expone. Acotado a la barberia del administrador.
-    /// </summary>
     public class ListBarbersForAdminUseCase
     {
         private readonly IBarberRepository _barbers;

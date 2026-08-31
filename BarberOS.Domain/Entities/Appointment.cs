@@ -64,7 +64,8 @@ namespace BarberOS.Domain.Entities
             return appointment;
         }
 
-        public void Complete()
+        /// <param name="today">Se recibe porque el dominio no sabe en que huso vive cada sede.</param>
+        public void Complete(DateOnly today)
         {
             if (Status == AppointmentStatus.Completed)
                 throw new ConflictException("La reserva ya está marcada como completada.");
@@ -72,7 +73,6 @@ namespace BarberOS.Domain.Entities
             if (Status == AppointmentStatus.Cancelled)
                 throw new BusinessRuleException("No se puede completar una reserva cancelada.");
 
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
             if (Date > today)
                 throw new BusinessRuleException("No se puede completar una reserva futura.");
 

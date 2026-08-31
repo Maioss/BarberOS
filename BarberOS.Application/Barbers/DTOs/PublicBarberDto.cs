@@ -1,10 +1,6 @@
 namespace BarberOS.Application.Barbers.DTOs
 {
-    /// <summary>
-    /// Barbero tal como lo ve un visitante anonimo en la landing y en el flujo de
-    /// reserva: sin datos de contacto ni el id de usuario, que solo hacen falta en
-    /// el panel de administracion.
-    /// </summary>
+    /// <summary>Sin datos de contacto ni id de usuario: lo consume la landing sin autenticar.</summary>
     public record PublicBarberDto(
         Guid Id,
         string FullName,

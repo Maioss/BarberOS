@@ -26,16 +26,12 @@ namespace BarberOS.Application.Appointments.UseCases
             AppointmentFilter filter,
             CancellationToken ct = default)
         {
-            // null = SuperAdmin, sin restriccion de sede.
             var allowed = await _scope.VisibleSiteIdsAsync(ct);
             var sites = allowed;
 
             if (filter.BarbershopId is not null)
             {
                 await _scope.EnsureInScopeAsync(filter.BarbershopId.Value, ct);
-
-                // El panel filtra por la sede principal, pero las citas guardan la
-                // sucursal: sin expandir, la consulta no devuelve nada.
                 var requested = await _scope.SitesCoveredByAsync(filter.BarbershopId.Value, ct);
                 sites = allowed is null ? requested : requested.Where(allowed.Contains).ToList();
             }

@@ -1,4 +1,6 @@
 using BarberOS.Api.Common;
+using BarberOS.Api.Services;
+using BarberOS.Domain.Exceptions;
 using BarberOS.Application.Shared;
 using BarberOS.Application.Users.DTOs;
 using BarberOS.Application.Users.UseCases;
@@ -95,38 +97,22 @@ namespace BarberOS.Api.Controllers
 
         [HttpPost("me/photo/upload")]
         [Consumes("multipart/form-data")]
+        [RequestSizeLimit(ProfilePhotoStorage.MaxBytes)]
         public async Task<ActionResult<ApiResponse<UserDto>>> UploadMyPhoto(
-            IFormFile file,
+            IFormFile? file,
             [FromServices] UpdateMyPhotoUseCase useCase,
-            [FromServices] Microsoft.AspNetCore.Hosting.IWebHostEnvironment env,
+            [FromServices] ICurrentUserService currentUser,
+            [FromServices] ProfilePhotoStorage storage,
             CancellationToken ct)
         {
-            var allowedTypes = new[] { "image/jpeg", "image/png", "image/webp" };
-            if (!allowedTypes.Contains(file.ContentType.ToLower()))
-                return BadRequest(ApiResponse<UserDto>.Fail("Solo se permiten imágenes JPEG, PNG o WebP."));
+            var userId = currentUser.UserId
+                ?? throw new UnauthorizedException("No autenticado.");
 
-            if (file.Length > 5 * 1024 * 1024)
-                return BadRequest(ApiResponse<UserDto>.Fail("La imagen no puede superar 5 MB."));
+            var saved = await storage.SaveAsync(file, userId, ct);
+            if (!saved.Ok)
+                return BadRequest(ApiResponse<UserDto>.Fail(saved.Error!));
 
-            var ext = file.ContentType.ToLower() switch
-            {
-                "image/jpeg" => ".jpg",
-                "image/png"  => ".png",
-                "image/webp" => ".webp",
-                _            => ".jpg"
-            };
-
-            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? Guid.NewGuid().ToString();
-            var fileName = $"{userId}{ext}";
-            var webRoot = env.WebRootPath ?? Path.Combine(env.ContentRootPath, "wwwroot");
-            var photosDir = Path.Combine(webRoot, "photos");
-            Directory.CreateDirectory(photosDir);
-
-            using (var stream = System.IO.File.Create(Path.Combine(photosDir, fileName)))
-                await file.CopyToAsync(stream, ct);
-
-            var photoUrl = $"{Request.Scheme}://{Request.Host}/photos/{fileName}";
-            var result = await useCase.ExecuteAsync(new UpdateMyPhotoRequest(photoUrl), ct);
+            var result = await useCase.ExecuteAsync(new UpdateMyPhotoRequest(saved.RelativeUrl), ct);
             return Ok(ApiResponse<UserDto>.Ok(result, "Foto actualizada."));
         }
 
