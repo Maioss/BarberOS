@@ -71,8 +71,8 @@ public class BookingAndMoneyTests(ApiFixture api)
     [Fact]
     public async Task Un_cliente_no_puede_reservar_a_nombre_de_otro()
     {
-        var client = await api.AsClient();
-        var victimClient = await api.AsOtherClient();
+        var client = api.AsClient();
+        var victimClient = api.AsOtherClient();
         var victim = await victimClient.GetData<ApiFixture.UserData>("/api/users/me");
         var (barber, service) = await BookableBarber();
 
@@ -85,8 +85,8 @@ public class BookingAndMoneyTests(ApiFixture api)
     [Fact]
     public async Task Un_admin_si_puede_reservar_a_nombre_de_un_cliente()
     {
-        var admin = await api.AsAdmin();
-        var clientHttp = await api.AsClient();
+        var admin = api.AsAdmin();
+        var clientHttp = api.AsClient();
         var target = await clientHttp.GetData<ApiFixture.UserData>("/api/users/me");
 
         var mine = (await admin.GetData<ApiFixture.UserData>("/api/users/me")).BarbershopId!.Value;
@@ -118,7 +118,7 @@ public class BookingAndMoneyTests(ApiFixture api)
     [Fact]
     public async Task No_se_puede_reservar_un_horario_de_hoy_que_ya_paso()
     {
-        var client = await api.AsClient();
+        var client = api.AsClient();
         var (barber, service) = await BookableBarber();
         var today = ShopToday();
 
@@ -131,7 +131,7 @@ public class BookingAndMoneyTests(ApiFixture api)
     [Fact]
     public async Task No_se_puede_reservar_en_una_fecha_pasada()
     {
-        var client = await api.AsClient();
+        var client = api.AsClient();
         var (barber, service) = await BookableBarber();
 
         var response = await client.PostAsJsonAsync("/api/appointments",
@@ -144,8 +144,8 @@ public class BookingAndMoneyTests(ApiFixture api)
     [Fact]
     public async Task Dos_reservas_que_se_solapan_no_pueden_coexistir()
     {
-        var first = await api.AsClient();
-        var second = await api.AsOtherClient();
+        var first = api.AsClient();
+        var second = api.AsOtherClient();
         var (barber, service) = await BookableBarber();
         var date = NextMonday(5);
 
@@ -170,10 +170,10 @@ public class BookingAndMoneyTests(ApiFixture api)
 
         var clients = new[]
         {
-            await api.AsClient(),
-            await api.AsOtherClient(),
-            await api.AsClient(),
-            await api.AsOtherClient()
+            api.AsClient(),
+            api.AsOtherClient(),
+            api.AsClient(),
+            api.AsOtherClient()
         };
 
         var responses = await Task.WhenAll(clients.Select((c, i) =>
@@ -187,8 +187,8 @@ public class BookingAndMoneyTests(ApiFixture api)
     [Fact]
     public async Task Completar_una_cita_acredita_su_total_al_saldo_del_barbero()
     {
-        var admin = await api.AsSuperAdmin();
-        var barberHttp = await api.AsBarber();
+        var admin = api.AsSuperAdmin();
+        var barberHttp = api.AsBarber();
         var before = await barberHttp.GetData<BalanceInfo>("/api/barbers/me/balance");
 
         var appointment = await CompleteAppointmentAsSuperAdmin();
@@ -200,7 +200,7 @@ public class BookingAndMoneyTests(ApiFixture api)
     [Fact]
     public async Task El_pago_toma_el_monto_de_la_cita_y_no_lo_que_manda_el_cliente()
     {
-        var admin = await api.AsSuperAdmin();
+        var admin = api.AsSuperAdmin();
         var appointment = await CompleteAppointmentAsSuperAdmin();
 
         var response = await admin.PostAsJsonAsync("/api/payments", new
@@ -218,8 +218,8 @@ public class BookingAndMoneyTests(ApiFixture api)
     [Fact]
     public async Task Reembolsar_deja_el_saldo_como_estaba_antes_de_completar()
     {
-        var admin = await api.AsSuperAdmin();
-        var barberHttp = await api.AsBarber();
+        var admin = api.AsSuperAdmin();
+        var barberHttp = api.AsBarber();
         var before = await barberHttp.GetData<BalanceInfo>("/api/barbers/me/balance");
 
         var appointment = await CompleteAppointmentAsSuperAdmin();
@@ -236,7 +236,7 @@ public class BookingAndMoneyTests(ApiFixture api)
     [Fact]
     public async Task Un_pago_no_se_puede_reembolsar_dos_veces()
     {
-        var admin = await api.AsSuperAdmin();
+        var admin = api.AsSuperAdmin();
         var appointment = await CompleteAppointmentAsSuperAdmin();
         var payment = await (await admin.PostAsJsonAsync("/api/payments",
             new { appointmentId = appointment.Id, method = "Cash", notes = (string?)null })).ReadData<Payment>();
@@ -249,7 +249,7 @@ public class BookingAndMoneyTests(ApiFixture api)
 
     private async Task<Appointment> CompleteAppointmentAsSuperAdmin()
     {
-        var barberHttp = await api.AsBarber();
+        var barberHttp = api.AsBarber();
         var me = await barberHttp.GetData<ApiFixture.UserData>("/api/users/me");
         var branchId = me.BarbershopId!.Value;
 
@@ -263,12 +263,12 @@ public class BookingAndMoneyTests(ApiFixture api)
         Assert.True(availability.Slots.Count > 0,
             $"No quedan huecos hoy ({ShopToday():yyyy-MM-dd} {ShopNow():HH\\:mm}) para completar una cita.");
 
-        var client = await api.AsClient();
+        var client = api.AsClient();
         var created = await (await client.PostAsJsonAsync("/api/appointments",
             Booking(barber.Id, ShopToday(), availability.Slots[0].Start, services[0].Id, $"cobro-{Guid.NewGuid():N}")))
             .ReadData<Appointment>();
 
-        var superAdmin = await api.AsSuperAdmin();
+        var superAdmin = api.AsSuperAdmin();
         (await superAdmin.PatchAsync($"/api/appointments/{created.Id}/complete", null)).EnsureSuccessStatusCode();
         return created;
     }
@@ -277,7 +277,7 @@ public class BookingAndMoneyTests(ApiFixture api)
     [Fact]
     public async Task Filtrar_pagos_por_fecha_no_revienta()
     {
-        var admin = await api.AsAdmin();
+        var admin = api.AsAdmin();
 
         var response = await admin.GetAsync("/api/payments?dateFrom=2026-01-01&dateTo=2026-12-31");
 
@@ -289,7 +289,7 @@ public class BookingAndMoneyTests(ApiFixture api)
     [InlineData("/api/payments?pageSize=100000")]
     public async Task La_paginacion_esta_topada(string url)
     {
-        var admin = await api.AsAdmin();
+        var admin = api.AsAdmin();
 
         var page = await admin.GetData<Paged<object>>(url);
 
@@ -299,7 +299,7 @@ public class BookingAndMoneyTests(ApiFixture api)
     [Fact]
     public async Task Subir_una_foto_sin_adjuntar_archivo_es_un_error_del_cliente()
     {
-        var client = await api.AsClient();
+        var client = api.AsClient();
         using var form = new MultipartFormDataContent
         {
             { new StringContent("no soy un archivo"), "otroCampo" }
@@ -313,7 +313,7 @@ public class BookingAndMoneyTests(ApiFixture api)
     [Fact]
     public async Task Un_archivo_que_no_es_imagen_se_rechaza_aunque_diga_que_lo_es()
     {
-        var client = await api.AsClient();
+        var client = api.AsClient();
         var content = new ByteArrayContent("<html>no soy una imagen</html>"u8.ToArray());
         content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/jpeg");
 
@@ -327,7 +327,7 @@ public class BookingAndMoneyTests(ApiFixture api)
     [Fact]
     public async Task Una_imagen_real_se_guarda_como_ruta_relativa_y_se_sirve()
     {
-        var client = await api.AsClient();
+        var client = api.AsClient();
         var png = new byte[]
         {
             0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D,
@@ -352,7 +352,7 @@ public class BookingAndMoneyTests(ApiFixture api)
     [Fact]
     public async Task No_se_puede_apuntar_la_foto_a_un_servidor_ajeno()
     {
-        var client = await api.AsClient();
+        var client = api.AsClient();
 
         var response = await client.PutAsJsonAsync("/api/users/me/photo",
             new { photoUrl = "https://evil.com/track.gif" });

@@ -17,7 +17,7 @@ public class AccessControlTests(ApiFixture api)
 
     private async Task<Guid> AdminBarbershopId()
     {
-        var client = await api.AsAdmin();
+        var client = api.AsAdmin();
         var me = await client.GetData<ApiFixture.UserData>("/api/users/me");
         return me.BarbershopId!.Value;
     }
@@ -41,7 +41,7 @@ public class AccessControlTests(ApiFixture api)
     [Fact]
     public async Task Un_cliente_no_puede_crear_barberias()
     {
-        var client = await api.AsClient();
+        var client = api.AsClient();
 
         var response = await client.PostAsJsonAsync("/api/barbershops", NewShop("Sede del cliente"));
 
@@ -51,7 +51,7 @@ public class AccessControlTests(ApiFixture api)
     [Fact]
     public async Task Un_admin_tampoco_puede_crear_barberias()
     {
-        var client = await api.AsAdmin();
+        var client = api.AsAdmin();
 
         var response = await client.PostAsJsonAsync("/api/barbershops", NewShop("Sede del admin"));
 
@@ -61,7 +61,7 @@ public class AccessControlTests(ApiFixture api)
     [Fact]
     public async Task Un_cliente_no_puede_renombrar_una_barberia()
     {
-        var client = await api.AsClient();
+        var client = api.AsClient();
         var shop = await ForeignMainShopWithServices();
 
         var response = await client.PutAsJsonAsync($"/api/barbershops/{shop.Id}",
@@ -73,7 +73,7 @@ public class AccessControlTests(ApiFixture api)
     [Fact]
     public async Task Un_cliente_no_puede_desactivar_una_sucursal()
     {
-        var client = await api.AsClient();
+        var client = api.AsClient();
         var branches = await api.Anonymous().GetData<Paged<Shop>>("/api/barbershops?isMain=false&pageSize=20");
 
         var response = await client.DeleteAsync($"/api/barbershops/{branches.Items[0].Id}");
@@ -84,7 +84,7 @@ public class AccessControlTests(ApiFixture api)
     [Fact]
     public async Task Un_superadmin_si_puede_crear_barberias()
     {
-        var client = await api.AsSuperAdmin();
+        var client = api.AsSuperAdmin();
 
         var response = await client.PostAsJsonAsync("/api/barbershops", NewShop($"Sede QA {Guid.NewGuid():N}"));
 
@@ -97,7 +97,7 @@ public class AccessControlTests(ApiFixture api)
     [InlineData("Admin")]
     public async Task Un_admin_no_puede_crear_cuentas_de_administrador(string role)
     {
-        var client = await api.AsAdmin();
+        var client = api.AsAdmin();
 
         var response = await client.PostAsJsonAsync("/api/users", new
         {
@@ -115,8 +115,8 @@ public class AccessControlTests(ApiFixture api)
     [Fact]
     public async Task Un_admin_no_puede_editar_al_superadmin()
     {
-        var admin = await api.AsAdmin();
-        var superAdmin = await api.AsSuperAdmin();
+        var admin = api.AsAdmin();
+        var superAdmin = api.AsSuperAdmin();
         var target = await superAdmin.GetData<ApiFixture.UserData>("/api/users/me");
 
         var response = await admin.PutAsJsonAsync($"/api/users/{target.Id}",
@@ -128,8 +128,8 @@ public class AccessControlTests(ApiFixture api)
     [Fact]
     public async Task Un_admin_no_puede_desactivar_al_superadmin()
     {
-        var admin = await api.AsAdmin();
-        var superAdmin = await api.AsSuperAdmin();
+        var admin = api.AsAdmin();
+        var superAdmin = api.AsSuperAdmin();
         var target = await superAdmin.GetData<ApiFixture.UserData>("/api/users/me");
 
         var response = await admin.DeleteAsync($"/api/users/{target.Id}");
@@ -140,7 +140,7 @@ public class AccessControlTests(ApiFixture api)
     [Fact]
     public async Task Un_admin_si_puede_crear_un_barbero_de_su_sede()
     {
-        var admin = await api.AsAdmin();
+        var admin = api.AsAdmin();
         var response = await admin.PostAsJsonAsync("/api/users", new
         {
             email = $"barbero-{Guid.NewGuid():N}@barberos.com",
@@ -158,8 +158,8 @@ public class AccessControlTests(ApiFixture api)
     [Fact]
     public async Task Un_cliente_no_puede_leer_el_usuario_de_otro()
     {
-        var client = await api.AsClient();
-        var superAdmin = await api.AsSuperAdmin();
+        var client = api.AsClient();
+        var superAdmin = api.AsSuperAdmin();
         var target = await superAdmin.GetData<ApiFixture.UserData>("/api/users/me");
 
         var response = await client.GetAsync($"/api/users/{target.Id}");
@@ -170,7 +170,7 @@ public class AccessControlTests(ApiFixture api)
     [Fact]
     public async Task Un_cliente_si_puede_leer_su_propio_perfil()
     {
-        var client = await api.AsClient();
+        var client = api.AsClient();
 
         var me = await client.GetData<ApiFixture.UserData>("/api/users/me");
 
@@ -194,7 +194,7 @@ public class AccessControlTests(ApiFixture api)
     [Fact]
     public async Task El_listado_administrativo_de_barberos_si_trae_el_telefono()
     {
-        var admin = await api.AsAdmin();
+        var admin = api.AsAdmin();
 
         var response = await admin.GetAsync($"/api/barbers?barbershopId={await AdminBarbershopId()}");
         var raw = await response.Content.ReadAsStringAsync();
@@ -206,7 +206,7 @@ public class AccessControlTests(ApiFixture api)
     [Fact]
     public async Task Un_cliente_no_puede_usar_el_listado_administrativo_de_barberos()
     {
-        var client = await api.AsClient();
+        var client = api.AsClient();
 
         var response = await client.GetAsync($"/api/barbers?barbershopId={await AdminBarbershopId()}");
 
@@ -217,7 +217,7 @@ public class AccessControlTests(ApiFixture api)
     [Fact]
     public async Task Un_admin_no_ve_las_metricas_de_otra_barberia()
     {
-        var admin = await api.AsAdmin();
+        var admin = api.AsAdmin();
         var foreign = await ForeignMainShopWithServices();
 
         var response = await admin.GetAsync($"/api/metrics/barbershop/{foreign.Id}");
@@ -228,7 +228,7 @@ public class AccessControlTests(ApiFixture api)
     [Fact]
     public async Task Un_admin_si_ve_las_metricas_de_la_suya()
     {
-        var admin = await api.AsAdmin();
+        var admin = api.AsAdmin();
 
         var response = await admin.GetAsync($"/api/metrics/barbershop/{await AdminBarbershopId()}");
 
@@ -238,7 +238,7 @@ public class AccessControlTests(ApiFixture api)
     [Fact]
     public async Task Un_admin_no_puede_crear_servicios_en_otra_barberia()
     {
-        var admin = await api.AsAdmin();
+        var admin = api.AsAdmin();
         var foreign = await ForeignMainShopWithServices();
 
         var response = await admin.PostAsJsonAsync("/api/services", new
@@ -256,7 +256,7 @@ public class AccessControlTests(ApiFixture api)
     [Fact]
     public async Task Un_admin_no_puede_editar_un_servicio_de_otra_barberia()
     {
-        var admin = await api.AsAdmin();
+        var admin = api.AsAdmin();
         var foreign = await ForeignMainShopWithServices();
         var services = await api.Anonymous().GetData<List<Service>>($"/api/barbershops/{foreign.Id}/services");
 
@@ -269,7 +269,7 @@ public class AccessControlTests(ApiFixture api)
     [Fact]
     public async Task Un_admin_no_puede_listar_los_barberos_de_otra_barberia()
     {
-        var admin = await api.AsAdmin();
+        var admin = api.AsAdmin();
         var foreign = await ForeignMainShopWithServices();
 
         var response = await admin.GetAsync($"/api/barbers?barbershopId={foreign.Id}");
@@ -280,8 +280,8 @@ public class AccessControlTests(ApiFixture api)
     [Fact]
     public async Task Un_admin_solo_ve_las_citas_de_su_barberia()
     {
-        var admin = await api.AsAdmin();
-        var superAdmin = await api.AsSuperAdmin();
+        var admin = api.AsAdmin();
+        var superAdmin = api.AsSuperAdmin();
         var mine = await AdminBarbershopId();
 
         var sitesOfMine = await api.Anonymous().GetData<Paged<Shop>>("/api/barbershops?pageSize=100");
@@ -300,7 +300,7 @@ public class AccessControlTests(ApiFixture api)
     [Fact]
     public async Task Un_superadmin_no_tiene_restriccion_de_sede()
     {
-        var superAdmin = await api.AsSuperAdmin();
+        var superAdmin = api.AsSuperAdmin();
         var foreign = await ForeignMainShopWithServices();
 
         var response = await superAdmin.GetAsync($"/api/metrics/barbershop/{foreign.Id}");
