@@ -1,4 +1,4 @@
-﻿using BarberOS.Application.Auth.DTOs;
+using BarberOS.Application.Auth.DTOs;
 using BarberOS.Application.Shared;
 using BarberOS.Domain.Entities;
 using BarberOS.Domain.Enums;
@@ -11,32 +11,34 @@ namespace BarberOS.Application.Auth.UseCases
     {
         private readonly IUserRepository _users;
         private readonly IPasswordHasher _hasher;
-        private readonly IJwtTokenGenerator _jwt;
+        private readonly SessionIssuer _issuer;
         private readonly IUnitOfWork _uow;
 
-        public RegisterClientUseCase(IUserRepository users, IPasswordHasher hasher, IJwtTokenGenerator jwt, IUnitOfWork uow)
+        public RegisterClientUseCase(
+            IUserRepository users,
+            IPasswordHasher hasher,
+            SessionIssuer issuer,
+            IUnitOfWork uow)
         {
             _users = users;
             _hasher = hasher;
-            _jwt = jwt;
+            _issuer = issuer;
             _uow = uow;
         }
 
         public async Task<AuthResponse> ExecuteAsync(RegisterClientRequest request, CancellationToken ct = default)
         {
-            var emailExists = await _users.ExistsByEmailAsync(request.Email, ct);
-            if (emailExists)
+            if (await _users.ExistsByEmailAsync(request.Email, ct))
                 throw new ConflictException("Ya existe una cuenta con ese correo.");
 
             var hash = _hasher.Hash(request.Password);
             var user = User.Create(request.Email, hash, request.FullName, Role.Client, request.Phone);
 
             await _users.AddAsync(user, ct);
-            await _uow.SaveChangesAsync(ct);
 
-            var token = _jwt.Generate(user);
-            var info = new UserInfo(user.Id, user.Email, user.FullName, user.Role, user.BarbershopId, user.PhotoUrl);
-            return new AuthResponse(token, info);
+            var response = await _issuer.IssueAsync(user, ct);
+            await _uow.SaveChangesAsync(ct);
+            return response;
         }
     }
 }

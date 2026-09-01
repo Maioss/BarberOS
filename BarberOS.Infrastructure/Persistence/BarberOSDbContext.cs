@@ -22,6 +22,7 @@ namespace BarberOS.Infrastructure.Persistence
         public DbSet<AppointmentServiceDbModel> AppointmentServices => Set<AppointmentServiceDbModel>();
         public DbSet<PaymentDbModel> Payments => Set<PaymentDbModel>();
         public DbSet<BalanceEntryDbModel> BalanceEntries => Set<BalanceEntryDbModel>();
+        public DbSet<RefreshTokenDbModel> RefreshTokens => Set<RefreshTokenDbModel>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import type { AuthState, AuthUser, LoginRequest, LoginResponse } from './types'
 import { decodeJwt, isTokenExpired } from './jwt'
 import { apiGet, apiPost } from '../api/client'
+import { clearSession, readSession, saveSession } from './session'
 
 const ROLE_CLAIM = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role'
 
@@ -61,8 +62,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({ user: null, token: null, isLoading: true })
 
   useEffect(() => {
-    const stored = localStorage.getItem('token')
-    if (stored && !isTokenExpired(stored)) {
+    const session = readSession()
+    const stored = session?.token ?? null
+    if (stored !== null && !isTokenExpired(stored)) {
       const claims = decodeJwt(stored)
       const user = claims ? userFromClaims(claims) : null
       setState({ user, token: stored, isLoading: false })
@@ -75,14 +77,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }).catch(() => { /* non-blocking */ })
       }
     } else {
-      localStorage.removeItem('token')
+      clearSession()
       setState({ user: null, token: null, isLoading: false })
     }
   }, [])
 
   useEffect(() => {
     const onUnauthorized = () => {
-      localStorage.removeItem('token')
+      clearSession()
       setState({ user: null, token: null, isLoading: false })
     }
     window.addEventListener('auth:unauthorized', onUnauthorized)
@@ -91,19 +93,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (req: LoginRequest): Promise<AuthUser> => {
     const data = await apiPost<LoginRequest, LoginResponse>('/api/auth/login', req)
-    localStorage.setItem('token', data.token)
+    saveSession({ token: data.token, refreshToken: data.refreshToken })
     setState({ user: data.user, token: data.token, isLoading: false })
     return data.user
   }, [])
 
   const logout = useCallback(() => {
-    localStorage.removeItem('token')
+    const session = readSession()
+    clearSession()
     setState({ user: null, token: null, isLoading: false })
+
+    // Sin revocar, el token de refresh sigue sirviendo 14 dias.
+    if (session) {
+      void apiPost<{ refreshToken: string }, void>('/api/auth/logout', {
+        refreshToken: session.refreshToken,
+      }).catch(() => { /* la sesion local ya esta cerrada */ })
+    }
   }, [])
 
   const register = useCallback(async (req: RegisterRequest): Promise<void> => {
     const data = await apiPost<RegisterRequest, LoginResponse>('/api/auth/register', req)
-    localStorage.setItem('token', data.token)
+    saveSession({ token: data.token, refreshToken: data.refreshToken })
     setState({ user: data.user, token: data.token, isLoading: false })
   }, [])
 

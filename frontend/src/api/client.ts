@@ -1,20 +1,49 @@
 import axios from 'axios'
-import type { AxiosError } from 'axios'
+import type { AxiosError, InternalAxiosRequestConfig } from 'axios'
 import { ApiError } from './types'
 import type { ApiResponse } from './types'
+import { clearSession, readAccessToken, readSession, saveSession } from '../auth/session'
 
 const http = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   headers: { 'Content-Type': 'application/json' },
 })
 
+const REFRESH_URL = '/api/auth/refresh'
+
 http.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token')
+  const token = readAccessToken()
   if (token) {
     config.headers['Authorization'] = `Bearer ${token}`
   }
   return config
 })
+
+/** Una sola renovacion en vuelo: varias peticiones que caducan juntas la comparten. */
+let refreshing: Promise<string> | null = null
+
+async function refreshAccessToken(): Promise<string> {
+  const session = readSession()
+  if (!session) throw new Error('Sin sesión que renovar')
+
+  const response = await axios.post<ApiResponse<{ token: string; refreshToken: string }>>(
+    `${import.meta.env.VITE_API_URL ?? ''}${REFRESH_URL}`,
+    { refreshToken: session.refreshToken },
+    { headers: { 'Content-Type': 'application/json' } },
+  )
+
+  const renewed = response.data.data
+  if (!renewed) throw new Error('La renovación no devolvió una sesión')
+
+  saveSession(renewed)
+  return renewed.token
+}
+
+function signOut(): never {
+  clearSession()
+  window.dispatchEvent(new Event('auth:unauthorized'))
+  throw new ApiError(401, 'La sesión expiró')
+}
 
 http.interceptors.response.use(
   (response) => {
@@ -24,15 +53,38 @@ http.interceptors.response.use(
     }
     return response
   },
-  (err: AxiosError) => {
+  async (err: AxiosError) => {
     const status = err.response?.status ?? 0
+    const request = err.config as (InternalAxiosRequestConfig & { retried?: boolean }) | undefined
+
+    const canRetry =
+      status === 401 &&
+      request !== undefined &&
+      request.retried !== true &&
+      request.url !== REFRESH_URL &&
+      readSession() !== null
+
+    if (canRetry) {
+      request.retried = true
+      try {
+        refreshing ??= refreshAccessToken().finally(() => {
+          refreshing = null
+        })
+        const token = await refreshing
+        request.headers['Authorization'] = `Bearer ${token}`
+        return http.request(request)
+      } catch {
+        signOut()
+      }
+    }
+
     if (status === 401) {
+      clearSession()
       window.dispatchEvent(new Event('auth:unauthorized'))
     }
+
     const body = err.response?.data as ApiResponse<unknown> | undefined
-    const message = body?.message ?? 'Error de conexión'
-    const errors = body?.errors
-    throw new ApiError(status, message, errors)
+    throw new ApiError(status, body?.message ?? 'Error de conexión', body?.errors)
   },
 )
 

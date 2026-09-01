@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using BarberOS.Application.Shared;
+using BarberOS.Application.Auth;
 using BarberOS.Application.Auth.UseCases;
 using BarberOS.Application.Barbershops.UseCases;
 using BarberOS.Application.Barbers.UseCases;
@@ -22,6 +23,9 @@ namespace BarberOS.Application
             services.AddScoped<LoginUseCase>();
             services.AddScoped<RegisterClientUseCase>();
             services.AddScoped<GetCurrentUserUseCase>();
+            services.AddScoped<RefreshSessionUseCase>();
+            services.AddScoped<LogoutUseCase>();
+            services.AddScoped<SessionIssuer>();
 
             services.AddScoped<ListBarbershopsUseCase>();
             services.AddScoped<GetBarbershopByIdUseCase>();

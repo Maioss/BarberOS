@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using BarberOS.Application.Shared;
+using BarberOS.Application.Auth;
 using BarberOS.Infrastructure.Persistence;
 using BarberOS.Infrastructure.Persistence.Repositories;
 using BarberOS.Infrastructure.Security;
@@ -30,11 +31,14 @@ namespace BarberOS.Infrastructure
             services.AddScoped<IAppointmentRepository, AppointmentRepository>();
             services.AddScoped<IPaymentRepository, PaymentRepository>();
             services.AddScoped<IBalanceEntryRepository, BalanceEntryRepository>();
+            services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
             services.AddScoped<IMetricsRepository, MetricsRepository>();
             services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
+            services.AddSingleton<IRefreshTokenFactory, RefreshTokenFactory>();
             services.AddSingleton<IBusinessClock, BusinessClock>();
 
             services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
+            services.AddSingleton(configuration.GetSection("Jwt").Get<RefreshTokenOptions>() ?? new RefreshTokenOptions());
             services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 
             var jwt = configuration.GetSection("Jwt").Get<JwtSettings>()
