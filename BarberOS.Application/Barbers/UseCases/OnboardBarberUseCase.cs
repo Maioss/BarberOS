@@ -56,8 +56,6 @@ namespace BarberOS.Application.Barbers.UseCases
 
             await _users.AddAsync(user, ct);
             await _barbers.AddAsync(barber, ct);
-
-            // Un solo SaveChanges: o entran los dos o no entra ninguno.
             await _uow.SaveChangesAsync(ct);
 
             return new BarberDto(

@@ -22,7 +22,6 @@ public class UpdateMyPhotoUseCase
         if (!_current.IsAuthenticated || _current.UserId is null)
             throw new UnauthorizedException("No autenticado.");
 
-        // Solo una ruta que haya producido la subida, o null para quitarla.
         if (request.PhotoUrl is not null && !IsStoredPhotoPath(request.PhotoUrl))
             throw new BusinessRuleException("La foto debe ser una imagen subida a la aplicación.");
 

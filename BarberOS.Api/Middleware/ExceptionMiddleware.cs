@@ -38,7 +38,6 @@ namespace BarberOS.Api.Middleware
             else
                 _logger.LogWarning("Error de negocio: {Message}", exception.Message);
 
-            // Tocar cabeceras con la respuesta ya empezada lanza otra excepcion que tapa esta.
             if (context.Response.HasStarted)
             {
                 _logger.LogWarning("La respuesta ya habia empezado; no se pudo devolver el error al cliente.");

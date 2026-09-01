@@ -48,7 +48,10 @@ namespace BarberOS.Infrastructure.Seeding
 
             if (!await db.Users.AnyAsync(u => u.Role == (int)Role.Admin, ct))
             {
-                var firstMain = await db.Barbershops.FirstAsync(b => b.IsMain, ct);
+                var firstMain = await db.Barbershops
+                    .Where(b => b.IsMain)
+                    .OrderBy(b => b.CreatedAt)
+                    .FirstAsync(ct);
 
                 var admin = User.Create(
                     email: "admin.pitch@barberos.com",

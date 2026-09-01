@@ -18,8 +18,6 @@ namespace BarberOS.Infrastructure.Persistence.Migrations
                 nullable: false,
                 defaultValue: "America/Bogota");
 
-            // Se guardaban con la URL absoluta del host, asi que al desplegar
-            // apuntaban todas a localhost.
             migrationBuilder.Sql("""
                 UPDATE users
                 SET "PhotoUrl" = regexp_replace("PhotoUrl", '^https?://[^/]+', '')

@@ -53,8 +53,6 @@ namespace BarberOS.Infrastructure.Persistence.Migrations
                 unique: true,
                 filter: "\"PaymentId\" IS NOT NULL");
 
-            // El saldo que ya tenia cada barbero pasa a ser su asiento de apertura,
-            // para que borrar la columna no pierda dinero.
             migrationBuilder.Sql("""
                 INSERT INTO barber_balance_entries
                     ("Id", "BarberId", "Amount", "Reason", "AppointmentId", "PaymentId", "CreatedAt")

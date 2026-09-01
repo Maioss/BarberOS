@@ -69,8 +69,7 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader());
 });
 
-// Sin esto, tras un proxy la app cree que la peticion llego por HTTP y
-// UseHttpsRedirection la reenvia en bucle.
+// Tras un proxy, sin esto UseHttpsRedirection entra en bucle.
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
