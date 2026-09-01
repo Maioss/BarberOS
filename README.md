@@ -30,7 +30,26 @@ npm run dev
 # → http://localhost:5173
 ```
 
-Al arrancar por primera vez el backend aplica las migraciones y siembra los datos de demo automáticamente.
+## Pruebas
+
+```bash
+dotnet test BarberOS.slnx
+```
+
+Las de integración levantan un PostgreSQL con Testcontainers, así que necesitan Docker corriendo.
+
+## Base de datos al arrancar
+
+En desarrollo el backend aplica las migraciones y siembra los datos de demo. Fuera de
+desarrollo no hace ninguna de las dos cosas y falla al arrancar si hay migraciones
+pendientes; se controla con estas claves:
+
+| Clave | Por defecto |
+|---|---|
+| `Database:ApplyMigrationsOnStartup` | `true` solo en desarrollo |
+| `Database:SeedDemoData` | `true` solo en desarrollo |
+
+Para aplicar migraciones a mano: `dotnet ef database update --project BarberOS.Infrastructure --startup-project BarberOS.Api`
 
 ## Credenciales de demo
 

@@ -11,8 +11,6 @@ namespace BarberOS.Infrastructure.Seeding
     {
         public static async Task SeedAsync(BarberOSDbContext db, IPasswordHasher hasher, CancellationToken ct = default)
         {
-            await db.Database.MigrateAsync(ct);
-
             if (!await db.Users.AnyAsync(u => u.Role == (int)Role.SuperAdmin, ct))
             {
                 var superAdmin = User.Create(

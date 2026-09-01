@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using BarberOS.Api.Common;
 using BarberOS.Api.Middleware;
 using BarberOS.Api.Services;
 using BarberOS.Application;
@@ -8,8 +9,9 @@ using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.FileProviders;
 using BarberOS.Infrastructure;
 using BarberOS.Infrastructure.Persistence;
-using BarberOS.Infrastructure.Seeding;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -73,8 +75,17 @@ builder.Services.AddCors(options =>
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-    options.KnownNetworks.Clear();
+    options.KnownIPNetworks.Clear();
     options.KnownProxies.Clear();
+});
+
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<BarberOSDbContext>("postgres");
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddPolicy(AuthRateLimit.PolicyName, AuthRateLimit.Partition);
+    options.OnRejected = AuthRateLimit.WriteRejection;
 });
 
 var app = builder.Build();
@@ -101,16 +112,15 @@ app.UseStaticFiles(new StaticFileOptions
 
 app.UseCors("Frontend");
 
+app.UseRateLimiter();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHealthChecks("/health", new HealthCheckOptions { ResponseWriter = HealthResponse.Write });
 
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<BarberOSDbContext>();
-    var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
-    await DataSeeder.SeedAsync(db, hasher);
-}
+await app.Services.PrepareDatabaseAsync(
+    builder.Configuration.ReadStartupOptions(app.Environment.IsDevelopment()));
 
 app.Run();
