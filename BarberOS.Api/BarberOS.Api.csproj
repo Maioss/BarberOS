@@ -8,6 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="BarberOS.Api.IntegrationTests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\BarberOS.Application\BarberOS.Application.csproj" />
     <ProjectReference Include="..\BarberOS.Infrastructure\BarberOS.Infrastructure.csproj" />
   </ItemGroup>
