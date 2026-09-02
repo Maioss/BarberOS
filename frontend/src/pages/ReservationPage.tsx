@@ -9,6 +9,7 @@ import {
 } from '../api/appointments'
 import { getBarbershopById } from '../api/barbershops'
 import type { BarbershopDto } from '../api/barbershops'
+import { ApiError } from '../api/types'
 import { LandingLayout } from '../layouts/LandingLayout'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
@@ -351,10 +352,12 @@ export function ReservationPage() {
   const totalPrice = selectedServices.reduce((acc, s) => acc + s.price, 0)
   const totalDuration = selectedServices.reduce((acc, s) => acc + s.durationMinutes, 0)
 
-  const canSubmit =
+  const slotChosen =
     state.selectedBarberId !== null &&
     state.selectedDate !== null &&
     state.selectedSlot !== null
+
+  const canSubmit = slotChosen && state.selectedServiceIds.length > 0
 
   const handleSubmit = async () => {
     if (!canSubmit || !state.selectedSlot || !state.selectedDate || !state.selectedBarberId) return
@@ -376,8 +379,7 @@ export function ReservationPage() {
         confirmedBarbershopName: bsName,
       }))
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Error al crear el turno'
-      setState(s => ({ ...s, isSubmitting: false, submitError: message }))
+      setState(s => ({ ...s, isSubmitting: false, submitError: describeError(err) }))
     }
   }
 
@@ -484,7 +486,7 @@ export function ReservationPage() {
           {/* ── STEP 4: Services ── */}
           {state.selectedSlot !== null && (
             <Card>
-              <SectionHeader step={4} title="Agregá servicios (opcional)" />
+              <SectionHeader step={4} title="Elegí los servicios" />
               {servicesLoading && (
                 <div className="flex justify-center py-6"><Spinner size="md" /></div>
               )}
@@ -507,7 +509,7 @@ export function ReservationPage() {
           )}
 
           {/* ── STEP 5: Confirm ── */}
-          {canSubmit && (
+          {slotChosen && (
             <Card>
               <SectionHeader step={5} title="Confirmá tu turno" />
               <div className="flex flex-col gap-3 text-sm mb-6">
@@ -538,8 +540,17 @@ export function ReservationPage() {
                 <Alert variant="error">{state.submitError}</Alert>
               )}
 
+              {!canSubmit && !servicesLoading && (
+                <p role="status" className="text-sm text-text-muted mb-3">
+                  {services.length === 0
+                    ? 'Esta barbería todavía no publicó servicios, así que no se puede reservar.'
+                    : 'Elegí al menos un servicio en el paso 4 para confirmar.'}
+                </p>
+              )}
+
               <Button
                 fullWidth
+                disabled={!canSubmit}
                 loading={state.isSubmitting}
                 onClick={() => void handleSubmit()}
               >
@@ -551,6 +562,13 @@ export function ReservationPage() {
       </div>
     </LandingLayout>
   )
+}
+
+function describeError(err: unknown): string {
+  if (err instanceof ApiError && err.errors !== undefined && err.errors.length > 0) {
+    return err.errors.join(' ')
+  }
+  return err instanceof Error ? err.message : 'Error al crear el turno'
 }
 
 function SummaryRow({ label, value }: { label: string; value: string }) {
