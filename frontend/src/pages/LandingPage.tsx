@@ -36,7 +36,7 @@ export function LandingPage() {
 
   const handleReserve = (id: string) => {
     if (user === null) {
-      navigate('/login')
+      navigate('/login', { state: { from: { pathname: `/reserve/${id}` } } })
     } else if (user.role === 'Client') {
       navigate(`/reserve/${id}`)
     }

@@ -31,6 +31,11 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
           <Link to={logoHref}><Logo size="sm" /></Link>
           <div className="flex items-center gap-3">
+            {user?.role === 'Client' && (
+              <Link to="/my-appointments" className="text-sm font-medium hover:text-accent transition-colors">
+                Mis turnos
+              </Link>
+            )}
             <Link to="/profile" className="flex items-center gap-3 group">
               <div className="hidden md:flex flex-col items-end leading-tight">
                 <span className="text-sm font-medium group-hover:text-accent transition-colors">

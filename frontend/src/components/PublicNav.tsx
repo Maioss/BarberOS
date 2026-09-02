@@ -20,6 +20,11 @@ export function PublicNav() {
     : user.role === 'Barber' ? '/my-schedule'
     : '/admin'
 
+  const accountHref = user === null ? '/login'
+    : user.role === 'Client' ? '/my-appointments'
+    : user.role === 'Barber' ? '/my-schedule'
+    : '/admin'
+
   return (
     <nav className={`sticky top-0 z-10 text-text-on-dark transition-all duration-300 ${scrolled ? 'bg-bg-dark shadow-lg' : 'bg-bg-dark/60 backdrop-blur-md'}`}>
       <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -30,16 +35,14 @@ export function PublicNav() {
           {user !== null ? (
             <>
               <span className="text-sm font-medium hidden sm:block">{user.fullName}</span>
-              {user.role !== 'Client' && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => navigate('/dashboard')}
-                  className="!border-accent !text-accent hover:!bg-accent/10"
-                >
-                  Mi cuenta
-                </Button>
-              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate(accountHref)}
+                className="!border-accent !text-accent hover:!bg-accent/10"
+              >
+                {user.role === 'Client' ? 'Mis turnos' : 'Mi cuenta'}
+              </Button>
               <Button
                 variant="ghost"
                 size="sm"

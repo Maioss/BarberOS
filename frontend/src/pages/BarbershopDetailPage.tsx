@@ -46,7 +46,7 @@ export function BarbershopDetailPage() {
 
   const handleReserve = () => {
     if (user === null) {
-      navigate('/login')
+      navigate('/login', { state: { from: { pathname: `/reserve/${id}` } } })
     } else if (user.role === 'Client' && id) {
       navigate(`/reserve/${id}`)
     }
@@ -149,7 +149,7 @@ export function BarbershopDetailPage() {
               {user === null ? (
                 <>
                   <p className="text-sm text-text-muted">Iniciá sesión para reservar tu turno.</p>
-                  <Button fullWidth onClick={() => navigate('/login')}>
+                  <Button fullWidth onClick={handleReserve}>
                     Iniciar sesión
                   </Button>
                 </>
