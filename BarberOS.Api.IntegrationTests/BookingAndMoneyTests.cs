@@ -50,12 +50,12 @@ public class BookingAndMoneyTests(ApiFixture api)
         throw new InvalidOperationException($"La sede {mainId} no tiene sucursales con barberos y servicios.");
     }
 
-    private static DateTime ShopLocalNow() => TimeZoneInfo.ConvertTimeFromUtc(
-        DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("America/Bogota"));
+    private DateTime ShopLocalNow() => TimeZoneInfo.ConvertTimeFromUtc(
+        api.Clock.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("America/Bogota"));
 
-    private static DateOnly ShopToday() => DateOnly.FromDateTime(ShopLocalNow());
+    private DateOnly ShopToday() => DateOnly.FromDateTime(ShopLocalNow());
 
-    private static TimeOnly ShopNow() => TimeOnly.FromDateTime(ShopLocalNow());
+    private TimeOnly ShopNow() => TimeOnly.FromDateTime(ShopLocalNow());
 
     private static DateOnly NextMonday(int weeksAhead)
     {
@@ -257,20 +257,25 @@ public class BookingAndMoneyTests(ApiFixture api)
         var services = await api.Anonymous().GetData<List<Service>>($"/api/barbershops/{branchId}/services");
         var barber = barbers.First(b => b.BarbershopId == branchId);
 
-        var availability = await api.Anonymous()
-            .GetData<Availability>($"/api/barbers/{barber.Id}/availability?date={ShopToday():yyyy-MM-dd}");
+        api.Clock.MoveToWorkingDay(new TimeOnly(9, 0));
+        try
+        {
+            var today = ShopToday();
+            var availability = await api.Anonymous()
+                .GetData<Availability>($"/api/barbers/{barber.Id}/availability?date={today:yyyy-MM-dd}");
 
-        Assert.True(availability.Slots.Count > 0,
-            $"No quedan huecos hoy ({ShopToday():yyyy-MM-dd} {ShopNow():HH\\:mm}) para completar una cita.");
+            var created = await (await api.AsClient().PostAsJsonAsync("/api/appointments",
+                Booking(barber.Id, today, availability.Slots[0].Start, services[0].Id, $"cobro-{Guid.NewGuid():N}")))
+                .ReadData<Appointment>();
 
-        var client = api.AsClient();
-        var created = await (await client.PostAsJsonAsync("/api/appointments",
-            Booking(barber.Id, ShopToday(), availability.Slots[0].Start, services[0].Id, $"cobro-{Guid.NewGuid():N}")))
-            .ReadData<Appointment>();
-
-        var superAdmin = api.AsSuperAdmin();
-        (await superAdmin.PatchAsync($"/api/appointments/{created.Id}/complete", null)).EnsureSuccessStatusCode();
-        return created;
+            (await api.AsSuperAdmin().PatchAsync($"/api/appointments/{created.Id}/complete", null))
+                .EnsureSuccessStatusCode();
+            return created;
+        }
+        finally
+        {
+            api.Clock.Reset();
+        }
     }
 
 

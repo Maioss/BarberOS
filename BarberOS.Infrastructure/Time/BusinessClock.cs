@@ -8,7 +8,7 @@ namespace BarberOS.Infrastructure.Time
     {
         private static readonly ConcurrentDictionary<string, TimeZoneInfo> Cache = new();
 
-        public DateTime UtcNow => DateTime.UtcNow;
+        public virtual DateTime UtcNow => DateTime.UtcNow;
 
         public DateOnly Today(Barbershop shop) => DateOnly.FromDateTime(LocalNow(shop));
 
