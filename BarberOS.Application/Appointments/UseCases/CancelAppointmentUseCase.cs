@@ -9,22 +9,28 @@ namespace BarberOS.Application.Appointments.UseCases
         private readonly IAppointmentRepository _appointments;
         private readonly IBarberRepository _barbers;
         private readonly TenantScope _scope;
+        private readonly ICurrentUserService _current;
         private readonly IUnitOfWork _uow;
 
         public CancelAppointmentUseCase(
             IAppointmentRepository appointments,
             IBarberRepository barbers,
             TenantScope scope,
+            ICurrentUserService current,
             IUnitOfWork uow)
         {
             _appointments = appointments;
             _barbers = barbers;
             _scope = scope;
+            _current = current;
             _uow = uow;
         }
 
-        public async Task ExecuteAsync(Guid id, Guid requestingUserId, Role requestingRole, CancellationToken ct = default)
+        public async Task ExecuteAsync(Guid id, CancellationToken ct = default)
         {
+            var requestingUserId = _current.RequireUserId();
+            var requestingRole = _current.RequireRole();
+
             var appointment = await _appointments.GetByIdAsync(id, ct)
                 ?? throw NotFoundException.For("reserva", id);
 

@@ -14,7 +14,7 @@ namespace BarberOS.Api.Controllers
     public class BarbersController : ControllerBase
     {
         [HttpGet("me/appointments")]
-        [Authorize(Roles = "Barber")]
+        [Authorize(Policy = Policies.BarberOnly)]
         public async Task<ActionResult<ApiResponse<IReadOnlyList<AppointmentDto>>>> GetMyAppointments(
             [FromServices] ListBarberScheduleUseCase useCase,
             CancellationToken ct)
@@ -24,7 +24,7 @@ namespace BarberOS.Api.Controllers
         }
 
         [HttpGet("me/balance")]
-        [Authorize]
+        [Authorize(Policy = Policies.BarberOnly)]
         public async Task<ActionResult<ApiResponse<BalanceDto>>> GetMyBalance(
             [FromServices] GetMyBalanceUseCase useCase,
             CancellationToken ct)
@@ -34,7 +34,7 @@ namespace BarberOS.Api.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "SuperAdmin,Admin")]
+        [Authorize(Policy = Policies.Management)]
         public async Task<ActionResult<ApiResponse<IReadOnlyList<BarberDto>>>> ListForAdmin(
             [FromQuery] Guid barbershopId,
             [FromServices] ListBarbersForAdminUseCase useCase,
@@ -56,7 +56,7 @@ namespace BarberOS.Api.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "SuperAdmin,Admin")]
+        [Authorize(Policy = Policies.Management)]
         public async Task<ActionResult<ApiResponse<BarberDto>>> Create(
             [FromBody] CreateBarberRequest request,
             [FromServices] IValidator<CreateBarberRequest> validator,
@@ -69,7 +69,7 @@ namespace BarberOS.Api.Controllers
         }
 
         [HttpPost("onboard")]
-        [Authorize(Roles = "SuperAdmin,Admin")]
+        [Authorize(Policy = Policies.Management)]
         public async Task<ActionResult<ApiResponse<BarberDto>>> Onboard(
             [FromBody] OnboardBarberRequest request,
             [FromServices] IValidator<OnboardBarberRequest> validator,

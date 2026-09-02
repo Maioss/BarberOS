@@ -13,6 +13,7 @@ namespace BarberOS.Application.Appointments.UseCases
         private readonly IBalanceEntryRepository _ledger;
         private readonly IBusinessClock _clock;
         private readonly TenantScope _scope;
+        private readonly ICurrentUserService _current;
         private readonly IUnitOfWork _uow;
 
         public CompleteAppointmentUseCase(
@@ -22,6 +23,7 @@ namespace BarberOS.Application.Appointments.UseCases
             IBalanceEntryRepository ledger,
             IBusinessClock clock,
             TenantScope scope,
+            ICurrentUserService current,
             IUnitOfWork uow)
         {
             _appointments = appointments;
@@ -30,11 +32,15 @@ namespace BarberOS.Application.Appointments.UseCases
             _ledger = ledger;
             _clock = clock;
             _scope = scope;
+            _current = current;
             _uow = uow;
         }
 
-        public async Task ExecuteAsync(Guid id, Guid requestingUserId, Role requestingRole, CancellationToken ct = default)
+        public async Task ExecuteAsync(Guid id, CancellationToken ct = default)
         {
+            var requestingUserId = _current.RequireUserId();
+            var requestingRole = _current.RequireRole();
+
             var appointment = await _appointments.GetByIdAsync(id, ct)
                 ?? throw NotFoundException.For("reserva", id);
 

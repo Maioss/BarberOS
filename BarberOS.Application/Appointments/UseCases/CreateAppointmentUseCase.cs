@@ -14,6 +14,7 @@ namespace BarberOS.Application.Appointments.UseCases
         private readonly IServiceRepository _services;
         private readonly IUserRepository _users;
         private readonly IBusinessClock _clock;
+        private readonly ICurrentUserService _current;
         private readonly IUnitOfWork _uow;
 
         public CreateAppointmentUseCase(
@@ -23,6 +24,7 @@ namespace BarberOS.Application.Appointments.UseCases
             IServiceRepository services,
             IUserRepository users,
             IBusinessClock clock,
+            ICurrentUserService current,
             IUnitOfWork uow)
         {
             _appointments = appointments;
@@ -31,15 +33,17 @@ namespace BarberOS.Application.Appointments.UseCases
             _services = services;
             _users = users;
             _clock = clock;
+            _current = current;
             _uow = uow;
         }
 
         public async Task<AppointmentDto> ExecuteAsync(
-            Guid requestingUserId,
-            Role requestingRole,
             CreateAppointmentRequest request,
             CancellationToken ct = default)
         {
+            var requestingUserId = _current.RequireUserId();
+            var requestingRole = _current.RequireRole();
+
             var barber = await _barbers.GetByIdAsync(request.BarberId, ct)
                 ?? throw NotFoundException.For("barbero", request.BarberId);
 

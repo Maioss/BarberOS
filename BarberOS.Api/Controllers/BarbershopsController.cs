@@ -50,7 +50,7 @@ namespace BarberOS.Api.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "SuperAdmin")]
+        [Authorize(Policy = Policies.OwnerOnly)]
         public async Task<ActionResult<ApiResponse<BarbershopDto>>> Create(
             [FromBody] CreateBarbershopRequest request,
             [FromServices] CreateBarbershopUseCase useCase,
@@ -61,7 +61,7 @@ namespace BarberOS.Api.Controllers
         }
 
         [HttpPut("{id:guid}")]
-        [Authorize(Roles = "SuperAdmin")]
+        [Authorize(Policy = Policies.OwnerOnly)]
         public async Task<ActionResult<ApiResponse<BarbershopDto>>> Update(
             Guid id,
             [FromBody] UpdateBarbershopRequest request,
@@ -73,7 +73,7 @@ namespace BarberOS.Api.Controllers
         }
 
         [HttpDelete("{id:guid}")]
-        [Authorize(Roles = "SuperAdmin")]
+        [Authorize(Policy = Policies.OwnerOnly)]
         public async Task<ActionResult<ApiResponse<object>>> Delete(
             Guid id,
             [FromServices] DeleteBarbershopUseCase useCase,

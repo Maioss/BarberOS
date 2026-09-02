@@ -13,13 +13,8 @@ namespace BarberOS.Api.Controllers
     [Authorize]
     public class PaymentsController : ControllerBase
     {
-        private readonly ICurrentUserService _currentUser;
-
-        public PaymentsController(ICurrentUserService currentUser) =>
-            _currentUser = currentUser;
-
         [HttpPost]
-        [Authorize(Roles = "SuperAdmin,Admin")]
+        [Authorize(Policy = Policies.Management)]
         public async Task<IActionResult> Register(
             [FromBody] RegisterPaymentRequest request,
             [FromServices] IValidator<RegisterPaymentRequest> validator,
@@ -32,19 +27,18 @@ namespace BarberOS.Api.Controllers
         }
 
         [HttpGet("me")]
-        [Authorize(Roles = "Client")]
+        [Authorize(Policy = Policies.ClientOnly)]
         public async Task<ActionResult<ApiResponse<PagedResult<PaymentDto>>>> GetMine(
             [FromQuery] PaymentFilter filter,
             [FromServices] ListMyPaymentsUseCase useCase,
             CancellationToken ct)
         {
-            var userId = _currentUser.UserId!.Value;
-            var result = await useCase.ExecuteAsync(userId, filter, ct);
+            var result = await useCase.ExecuteAsync(filter, ct);
             return Ok(ApiResponse<PagedResult<PaymentDto>>.Ok(result));
         }
 
         [HttpGet]
-        [Authorize(Roles = "SuperAdmin,Admin")]
+        [Authorize(Policy = Policies.Management)]
         public async Task<ActionResult<ApiResponse<PagedResult<PaymentDto>>>> List(
             [FromQuery] PaymentFilter filter,
             [FromServices] ListPaymentsUseCase useCase,
@@ -55,7 +49,7 @@ namespace BarberOS.Api.Controllers
         }
 
         [HttpGet("{id:guid}")]
-        [Authorize(Roles = "SuperAdmin,Admin")]
+        [Authorize(Policy = Policies.Management)]
         public async Task<ActionResult<ApiResponse<PaymentDto>>> GetById(
             Guid id,
             [FromServices] GetPaymentByIdUseCase useCase,
@@ -66,7 +60,7 @@ namespace BarberOS.Api.Controllers
         }
 
         [HttpPatch("{id:guid}/refund")]
-        [Authorize(Roles = "SuperAdmin,Admin")]
+        [Authorize(Policy = Policies.Management)]
         public async Task<IActionResult> Refund(
             Guid id,
             [FromServices] RefundPaymentUseCase useCase,

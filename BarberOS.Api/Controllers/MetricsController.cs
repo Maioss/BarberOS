@@ -12,7 +12,7 @@ namespace BarberOS.Api.Controllers
     public class MetricsController : ControllerBase
     {
         [HttpGet("barbershop/{id:guid}")]
-        [Authorize(Roles = "SuperAdmin,Admin")]
+        [Authorize(Policy = Policies.Management)]
         public async Task<IActionResult> GetBarbershopMetrics(
             Guid id,
             [FromQuery] MetricsQuery query,
@@ -24,6 +24,7 @@ namespace BarberOS.Api.Controllers
         }
 
         [HttpGet("barbers/me")]
+        [Authorize(Policy = Policies.BarberOnly)]
         public async Task<IActionResult> GetMyMetrics(
             [FromQuery] MetricsQuery query,
             [FromServices] GetMyBarberMetricsUseCase useCase,

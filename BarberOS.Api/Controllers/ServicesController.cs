@@ -9,7 +9,7 @@ namespace BarberOS.Api.Controllers
 {
     [ApiController]
     [Route("api/services")]
-    [Authorize(Roles = "SuperAdmin,Admin")]
+    [Authorize(Policy = Policies.Management)]
     public class ServicesController : ControllerBase
     {
         [HttpPost]

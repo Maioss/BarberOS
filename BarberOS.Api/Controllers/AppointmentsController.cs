@@ -14,13 +14,8 @@ namespace BarberOS.Api.Controllers
     [Authorize]
     public class AppointmentsController : ControllerBase
     {
-        private readonly ICurrentUserService _currentUser;
-
-        public AppointmentsController(ICurrentUserService currentUser) =>
-            _currentUser = currentUser;
-
         [HttpPost]
-        [Authorize(Roles = "SuperAdmin,Admin,Client")]
+        [Authorize(Policy = Policies.CanBook)]
         public async Task<IActionResult> Create(
             [FromBody] CreateAppointmentRequest request,
             [FromServices] IValidator<CreateAppointmentRequest> validator,
@@ -28,26 +23,23 @@ namespace BarberOS.Api.Controllers
             CancellationToken ct)
         {
             await validator.ValidateAndThrowAsync(request, ct);
-            var userId = _currentUser.UserId!.Value;
-            var role = _currentUser.Role!.Value;
-            var result = await useCase.ExecuteAsync(userId, role, request, ct);
+            var result = await useCase.ExecuteAsync(request, ct);
             return Created($"/api/appointments/{result.Id}", ApiResponse<AppointmentDto>.Ok(result, "Reserva creada."));
         }
 
         [HttpGet("me")]
-        [Authorize(Roles = "Client")]
+        [Authorize(Policy = Policies.ClientOnly)]
         public async Task<ActionResult<ApiResponse<PagedResult<AppointmentDto>>>> GetMine(
             [FromQuery] AppointmentFilter filter,
             [FromServices] ListMyAppointmentsUseCase useCase,
             CancellationToken ct)
         {
-            var userId = _currentUser.UserId!.Value;
-            var result = await useCase.ExecuteAsync(userId, filter, ct);
+            var result = await useCase.ExecuteAsync(filter, ct);
             return Ok(ApiResponse<PagedResult<AppointmentDto>>.Ok(result));
         }
 
         [HttpGet]
-        [Authorize(Roles = "SuperAdmin,Admin")]
+        [Authorize(Policy = Policies.Management)]
         public async Task<ActionResult<ApiResponse<PagedResult<AppointmentDto>>>> List(
             [FromQuery] AppointmentFilter filter,
             [FromServices] ListAppointmentsUseCase useCase,
@@ -58,7 +50,7 @@ namespace BarberOS.Api.Controllers
         }
 
         [HttpGet("{id:guid}")]
-        [Authorize(Roles = "SuperAdmin,Admin")]
+        [Authorize(Policy = Policies.Management)]
         public async Task<ActionResult<ApiResponse<AppointmentDto>>> GetById(
             Guid id,
             [FromServices] GetAppointmentByIdUseCase useCase,
@@ -69,28 +61,24 @@ namespace BarberOS.Api.Controllers
         }
 
         [HttpPatch("{id:guid}/cancel")]
-        [Authorize(Roles = "SuperAdmin,Admin,Client,Barber")]
+        [Authorize(Policy = Policies.CanCancel)]
         public async Task<IActionResult> Cancel(
             Guid id,
             [FromServices] CancelAppointmentUseCase useCase,
             CancellationToken ct)
         {
-            var userId = _currentUser.UserId!.Value;
-            var role = _currentUser.Role!.Value;
-            await useCase.ExecuteAsync(id, userId, role, ct);
+            await useCase.ExecuteAsync(id, ct);
             return NoContent();
         }
 
         [HttpPatch("{id:guid}/complete")]
-        [Authorize(Roles = "SuperAdmin,Admin,Barber")]
+        [Authorize(Policy = Policies.CanComplete)]
         public async Task<IActionResult> Complete(
             Guid id,
             [FromServices] CompleteAppointmentUseCase useCase,
             CancellationToken ct)
         {
-            var userId = _currentUser.UserId!.Value;
-            var role = _currentUser.Role!.Value;
-            await useCase.ExecuteAsync(id, userId, role, ct);
+            await useCase.ExecuteAsync(id, ct);
             return NoContent();
         }
     }

@@ -25,7 +25,7 @@ namespace BarberOS.Api.Controllers
         }
 
         [HttpGet("{id:guid}")]
-        [Authorize(Roles = "SuperAdmin,Admin")]
+        [Authorize(Policy = Policies.Management)]
         public async Task<ActionResult<ApiResponse<UserDto>>> GetById(
             Guid id,
             [FromServices] GetUserByIdUseCase useCase,
@@ -36,7 +36,7 @@ namespace BarberOS.Api.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "SuperAdmin,Admin")]
+        [Authorize(Policy = Policies.Management)]
         public async Task<ActionResult<ApiResponse<PagedResult<UserDto>>>> List(
             [FromQuery] UserFilter filter,
             [FromServices] ListUsersUseCase useCase,
@@ -47,7 +47,7 @@ namespace BarberOS.Api.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "SuperAdmin,Admin")]
+        [Authorize(Policy = Policies.Management)]
         public async Task<ActionResult<ApiResponse<UserDto>>> Create(
             [FromBody] CreateUserRequest request,
             [FromServices] IValidator<CreateUserRequest> validator,
@@ -60,7 +60,7 @@ namespace BarberOS.Api.Controllers
         }
 
         [HttpPut("{id:guid}")]
-        [Authorize(Roles = "SuperAdmin,Admin")]
+        [Authorize(Policy = Policies.Management)]
         public async Task<ActionResult<ApiResponse<UserDto>>> Update(
             Guid id,
             [FromBody] UpdateUserRequest request,
@@ -117,7 +117,7 @@ namespace BarberOS.Api.Controllers
         }
 
         [HttpDelete("{id:guid}")]
-        [Authorize(Roles = "SuperAdmin,Admin")]
+        [Authorize(Policy = Policies.Management)]
         public async Task<IActionResult> Delete(
             Guid id,
             [FromServices] DeleteUserUseCase useCase,

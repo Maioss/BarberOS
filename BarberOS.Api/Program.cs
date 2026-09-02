@@ -79,6 +79,8 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
     options.KnownProxies.Clear();
 });
 
+builder.Services.AddAuthorization(options => options.AddBarberOSPolicies());
+
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<BarberOSDbContext>("postgres");
 
@@ -118,7 +120,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-app.MapHealthChecks("/health", new HealthCheckOptions { ResponseWriter = HealthResponse.Write });
+app.MapHealthChecks("/health", new HealthCheckOptions { ResponseWriter = HealthResponse.Write })
+   .AllowAnonymous();
 
 await app.Services.PrepareDatabaseAsync(
     builder.Configuration.ReadStartupOptions(app.Environment.IsDevelopment()));

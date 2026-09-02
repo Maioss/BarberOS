@@ -6,12 +6,17 @@ namespace BarberOS.Application.Payments.UseCases
     public class ListMyPaymentsUseCase
     {
         private readonly IPaymentRepository _payments;
+        private readonly ICurrentUserService _current;
 
-        public ListMyPaymentsUseCase(IPaymentRepository payments) => _payments = payments;
-
-        public async Task<PagedResult<PaymentDto>> ExecuteAsync(Guid clientId, PaymentFilter filter, CancellationToken ct = default)
+        public ListMyPaymentsUseCase(IPaymentRepository payments, ICurrentUserService current)
         {
-            var result = await _payments.ListAsync(filter with { ClientId = clientId }, ct);
+            _payments = payments;
+            _current = current;
+        }
+
+        public async Task<PagedResult<PaymentDto>> ExecuteAsync(PaymentFilter filter, CancellationToken ct = default)
+        {
+            var result = await _payments.ListAsync(filter with { ClientId = _current.RequireUserId() }, ct);
             return new PagedResult<PaymentDto>(
                 result.Items.Select(RegisterPaymentUseCase.MapToDto).ToList(),
                 result.Page, result.PageSize, result.TotalCount);

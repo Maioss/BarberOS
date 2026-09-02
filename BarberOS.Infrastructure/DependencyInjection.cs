@@ -66,7 +66,6 @@ namespace BarberOS.Infrastructure
                     };
                 });
 
-            services.AddAuthorization();
 
             return services;
         }
