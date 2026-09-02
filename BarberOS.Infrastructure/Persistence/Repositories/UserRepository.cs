@@ -18,6 +18,18 @@ namespace BarberOS.Infrastructure.Persistence.Repositories
             return row is null ? null : UserMapper.ToDomain(row);
         }
 
+        public async Task<IReadOnlyList<User>> GetManyByIdsAsync(IEnumerable<Guid> ids, CancellationToken ct = default)
+        {
+            var idList = ids.Distinct().ToList();
+            if (idList.Count == 0) return Array.Empty<User>();
+
+            var rows = await _db.Users.AsNoTracking()
+                .Where(u => idList.Contains(u.Id))
+                .ToListAsync(ct);
+
+            return rows.Select(UserMapper.ToDomain).ToList();
+        }
+
         public async Task<User?> GetByEmailAsync(string email, CancellationToken ct = default)
         {
             var normalized = email.Trim().ToLowerInvariant();

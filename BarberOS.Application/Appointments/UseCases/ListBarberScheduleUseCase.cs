@@ -35,17 +35,8 @@ namespace BarberOS.Application.Appointments.UseCases
             var barber = await _barbers.GetByUserIdAsync(_current.UserId.Value, ct)
                 ?? throw new NotFoundException("No tienes un perfil de barbero registrado.");
 
-            var barberUser = await _users.GetByIdAsync(barber.UserId, ct);
-            var barberName = barberUser?.FullName ?? string.Empty;
-
             var appointments = await _appointments.ListByBarberAsync(barber.Id, ct);
-            var dtos = new List<AppointmentDto>();
-            foreach (var a in appointments)
-            {
-                var clientUser = await _users.GetByIdAsync(a.ClientId, ct);
-                dtos.Add(CreateAppointmentUseCase.MapToDto(a, clientUser?.FullName ?? string.Empty, barberName));
-            }
-            return dtos;
+            return await CreateAppointmentUseCase.MapManyAsync(appointments, _users, _barbers, ct);
         }
     }
 }

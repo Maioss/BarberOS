@@ -159,16 +159,41 @@ namespace BarberOS.Application.Appointments.UseCases
             a.CreatedAt,
             a.Services.Select(s => new AppointmentServiceDto(s.ServiceId, s.ServiceName, s.Price, s.DurationMinutes)).ToList());
 
-        internal static async Task<AppointmentDto> MapToDtoAsync(
-            Appointment a,
+        /// <summary>
+        /// Resuelve los nombres en dos consultas para toda la lista. Uno por uno eran
+        /// tres por cita: 61 consultas para devolver una página de 19.
+        /// </summary>
+        internal static async Task<List<AppointmentDto>> MapManyAsync(
+            IReadOnlyList<Appointment> appointments,
             IUserRepository users,
             IBarberRepository barbers,
             CancellationToken ct)
         {
-            var clientUser = await users.GetByIdAsync(a.ClientId, ct);
-            var barber = await barbers.GetByIdAsync(a.BarberId, ct);
-            var barberUser = barber is not null ? await users.GetByIdAsync(barber.UserId, ct) : null;
-            return MapToDto(a, clientUser?.FullName ?? string.Empty, barberUser?.FullName ?? string.Empty);
+            if (appointments.Count == 0) return [];
+
+            var barbersById = (await barbers.GetManyByIdsAsync(appointments.Select(a => a.BarberId), ct))
+                .ToDictionary(b => b.Id);
+
+            var userIds = appointments.Select(a => a.ClientId)
+                .Concat(barbersById.Values.Select(b => b.UserId));
+            var namesByUserId = (await users.GetManyByIdsAsync(userIds, ct))
+                .ToDictionary(u => u.Id, u => u.FullName);
+
+            return appointments.Select(a =>
+            {
+                var barberUserId = barbersById.TryGetValue(a.BarberId, out var barber) ? barber.UserId : Guid.Empty;
+                return MapToDto(
+                    a,
+                    namesByUserId.GetValueOrDefault(a.ClientId, string.Empty),
+                    namesByUserId.GetValueOrDefault(barberUserId, string.Empty));
+            }).ToList();
         }
+
+        internal static async Task<AppointmentDto> MapToDtoAsync(
+            Appointment a,
+            IUserRepository users,
+            IBarberRepository barbers,
+            CancellationToken ct) =>
+            (await MapManyAsync([a], users, barbers, ct))[0];
     }
 }

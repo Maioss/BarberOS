@@ -28,8 +28,6 @@ namespace BarberOS.Infrastructure.Persistence.Repositories
 
             var dateFrom = from;
             var dateTo = to;
-            var fromDt = DateTime.SpecifyKind(dateFrom.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc);
-            var toDt = DateTime.SpecifyKind(dateTo.AddDays(1).ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc);
 
             var totalAppointments = await _db.Appointments.AsNoTracking()
                 .CountAsync(a => siteIds.Contains(a.BarbershopId) && a.Date >= dateFrom && a.Date <= dateTo, ct);
@@ -51,28 +49,26 @@ namespace BarberOS.Infrastructure.Persistence.Repositories
                             && a.Status == completedStatus)
                 .SumAsync(a => (decimal?)a.TotalPrice, ct) ?? 0m;
 
-            // Refunds: join payments + appointments, materialize amounts, sum in memory
             var appointmentIdsInScope = await _db.Appointments.AsNoTracking()
                 .Where(a => siteIds.Contains(a.BarbershopId) && a.Date >= dateFrom && a.Date <= dateTo)
                 .Select(a => a.Id)
                 .ToListAsync(ct);
 
+            // Los pagos se imputan al periodo de su cita, igual que el ingreso bruto.
+            // Filtrarlos por su propia fecha mezclaba dos bases y el neto salia mal.
             var refunds = appointmentIdsInScope.Count == 0 ? 0m
                 : await _db.Payments.AsNoTracking()
                     .Where(p => appointmentIdsInScope.Contains(p.AppointmentId)
-                                && p.Status == (int)PaymentStatus.Refunded
-                                && p.CreatedAt >= fromDt && p.CreatedAt < toDt)
+                                && p.Status == (int)PaymentStatus.Refunded)
                     .SumAsync(p => (decimal?)p.Amount, ct) ?? 0m;
 
             var netRevenue = grossRevenue - refunds;
 
-            // PaymentsByMethod: fetch scalar rows, group in memory
             var paidPaymentRows = appointmentIdsInScope.Count == 0
                 ? new[] { new { Method = 0, Amount = 0m } }.Take(0).ToList()
                 : await _db.Payments.AsNoTracking()
                     .Where(p => appointmentIdsInScope.Contains(p.AppointmentId)
-                                && p.Status == (int)PaymentStatus.Paid
-                                && p.CreatedAt >= fromDt && p.CreatedAt < toDt)
+                                && p.Status == (int)PaymentStatus.Paid)
                     .Select(p => new { p.Method, p.Amount })
                     .ToListAsync(ct);
 

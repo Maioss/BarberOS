@@ -20,15 +20,6 @@ export interface UpdateScheduleRequest {
   availableDays: string[]
 }
 
-export interface CreateUserRequest {
-  email: string
-  password: string
-  fullName: string
-  phone: string | null
-  role: 'Barber'
-  barbershopId: string
-}
-
 export interface AdminServiceDto {
   id: string
   barbershopId: string
@@ -64,10 +55,6 @@ interface PagedResult<T> {
 
 export async function getBarbersByBarbershop(barbershopId: string): Promise<AdminBarberDto[]> {
   return apiGet<AdminBarberDto[]>(`/api/barbers?barbershopId=${barbershopId}`)
-}
-
-export async function createUserAsBarber(request: CreateUserRequest): Promise<{ id: string }> {
-  return apiPost<CreateUserRequest, { id: string }>('/api/users', request)
 }
 
 export async function createBarberProfile(userId: string): Promise<AdminBarberDto> {

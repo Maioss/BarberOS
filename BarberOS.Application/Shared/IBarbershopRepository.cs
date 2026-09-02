@@ -11,6 +11,5 @@ namespace BarberOS.Application.Shared
         Task<bool> HasActiveBranchesAsync(Guid parentId, CancellationToken ct = default);
         Task AddAsync(Barbershop barbershop, CancellationToken ct = default);
         void Update(Barbershop barbershop);
-        void Remove(Barbershop barbershop);
     }
 }

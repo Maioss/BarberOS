@@ -68,12 +68,5 @@ namespace BarberOS.Infrastructure.Persistence.Repositories
         {
             _db.Barbershops.Update(BarbershopMapper.ToDbModel(barbershop));
         }
-
-        public void Remove(Barbershop barbershop)
-        {
-            var row = BarbershopMapper.ToDbModel(barbershop);
-            _db.Barbershops.Attach(row);
-            _db.Barbershops.Remove(row);
-        }
     }
 }

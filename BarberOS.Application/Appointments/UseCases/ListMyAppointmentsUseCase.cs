@@ -27,9 +27,7 @@ namespace BarberOS.Application.Appointments.UseCases
             CancellationToken ct = default)
         {
             var result = await _appointments.ListByClientAsync(_current.RequireUserId(), filter, ct);
-            var dtos = new List<AppointmentDto>();
-            foreach (var a in result.Items)
-                dtos.Add(await CreateAppointmentUseCase.MapToDtoAsync(a, _users, _barbers, ct));
+            var dtos = await CreateAppointmentUseCase.MapManyAsync(result.Items, _users, _barbers, ct);
             return new PagedResult<AppointmentDto>(dtos, result.Page, result.PageSize, result.TotalCount);
         }
     }

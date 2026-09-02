@@ -8,7 +8,7 @@ namespace BarberOS.Infrastructure.Persistence.Configurations
     {
         public void Configure(EntityTypeBuilder<BarbershopDbModel> builder)
         {
-            builder.ToTable("Barbershops");
+            builder.ToTable("barbershops");
             builder.HasKey(b => b.Id);
 
             builder.Property(b => b.Name).IsRequired().HasMaxLength(150);
